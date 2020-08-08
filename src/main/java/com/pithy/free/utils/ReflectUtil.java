@@ -34,11 +34,12 @@ public class ReflectUtil {
 
     public static TableObject getTableValue(Object clz) throws Exception {
         try {
-            String table = clz.getClass().getAnnotation(Table.class).name();
+            Table ann = clz.getClass().getAnnotation(Table.class);
+            String table = ann.name();
             if (table == null || table.length() == 0) {
                 throw new Exception("invalid table name");
             }
-            String pk = clz.getClass().getAnnotation(Table.class).pk();
+            String pk = ann.pk();
             if (pk == null || pk.length() == 0) {
                 throw new Exception("invalid table pk name");
             }
@@ -54,12 +55,12 @@ public class ReflectUtil {
             return new ColumnObject(fname, false);
         }
         try {
-            String result = f.getAnnotation(Column.class).name();
+            Column column = f.getAnnotation(Column.class);
+            String result = column.name();
             if (result == null || result.length() == 0) {
                 result = fname;
             }
-            boolean ignore = f.getAnnotation(Column.class).ignore();
-            return new ColumnObject(result, ignore);
+            return new ColumnObject(result, column.ignore());
         } catch (NullPointerException e) {
             return new ColumnObject(fname, false);
         }
