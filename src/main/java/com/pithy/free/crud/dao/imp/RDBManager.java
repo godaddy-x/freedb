@@ -123,12 +123,11 @@ public class RDBManager implements IDBase {
             }
             StringBuffer sqlstr = new StringBuffer().append("insert into ").append(table.getTableName()).append(" (");
             sqlstr.append(part1.substring(0, part1.length() - 1)).append(") values (").append(part2.substring(0, part2.length() - 1)).append(")");
-            System.out.println(sqlstr.toString());
-            int[] ret = template.batchUpdate(sqlstr.toString(), argpart);
-            if (ret.length > 0) {
-                return ret[0];
+            if (log.isDebugEnabled()) {
+                log.debug("sql msg: " + sqlstr.toString());
             }
-            return 0;
+            int[] ret = template.batchUpdate(sqlstr.toString(), argpart);
+            return ret.length;
         } catch (Exception e) {
             throw new DbEx(e);
         }
@@ -180,7 +179,9 @@ public class RDBManager implements IDBase {
                 argpart.add(pkValue);
                 StringBuffer sqlstr = new StringBuffer().append("update ").append(table.getTableName()).append(" set ");
                 sqlstr.append(part1.substring(0, part1.length() - 1)).append(" where ").append(part2);
-                System.out.println(sqlstr);
+                if (log.isDebugEnabled()) {
+                    log.debug("sql msg: " + sqlstr.toString());
+                }
                 if (template.update(sqlstr.toString(), argpart.toArray()) > 0) {
                     ret++;
                 }
@@ -224,7 +225,9 @@ public class RDBManager implements IDBase {
             }
             sqlpart.append("update ").append(table.getTableName()).append(" set ").append(part1.substring(0, part1.length() - 1)).append(" where").append(whereCase.getSqlpart().substring(0, whereCase.getSqlpart().length() - 3));
             argpart.addAll(whereCase.getArgpart());
-            System.out.println(sqlpart.toString());
+            if (log.isDebugEnabled()) {
+                log.debug("sql msg: " + sqlpart.toString());
+            }
             return template.update(sqlpart.toString(), argpart.toArray());
         } catch (Exception e) {
             throw new DbEx(e);
@@ -271,7 +274,9 @@ public class RDBManager implements IDBase {
                 throw new DbEx("invalid entity field len");
             }
             StringBuffer sqlstr = new StringBuffer().append("delete from ").append(table.getTableName()).append(" where ").append(table.getPkName()).append(" in (").append(part1.substring(0, part1.length() - 1)).append(")");
-            System.out.println(sqlstr.toString());
+            if (log.isDebugEnabled()) {
+                log.debug("sql msg: " + sqlstr.toString());
+            }
             return template.update(sqlstr.toString(), argList.toArray());
         } catch (Exception e) {
             throw new DbEx(e);
@@ -298,7 +303,9 @@ public class RDBManager implements IDBase {
             }
             sqlpart.append("delete from ").append(table.getTableName()).append(" where").append(whereCase.getSqlpart().substring(0, whereCase.getSqlpart().length() - 3));
             argpart.addAll(whereCase.getArgpart());
-            System.out.println(sqlpart.toString());
+            if (log.isDebugEnabled()) {
+                log.debug("sql msg: " + sqlpart.toString());
+            }
             return template.update(sqlpart.toString(), argpart.toArray());
         } catch (Exception e) {
             throw new DbEx(e);
@@ -388,7 +395,9 @@ public class RDBManager implements IDBase {
             } else {
                 pagination = new SimplePagination<>();
             }
-            System.out.println(sqlstr);
+            if (log.isDebugEnabled()) {
+                log.debug("sql msg: " + sqlstr);
+            }
             List<E> list = null;
             if (IDEntity.class.isAssignableFrom(mapper)) {
                 list = template.query(sqlstr, argpart, new BeanPropertyRowMapper<E>(mapper));
@@ -471,7 +480,9 @@ public class RDBManager implements IDBase {
             } else {
                 pagination = new SimplePagination<>();
             }
-            System.out.println(sqlstr);
+            if (log.isDebugEnabled()) {
+                log.debug("sql msg: " + sqlstr);
+            }
             List<E> list = null;
             if (IDEntity.class.isAssignableFrom(mapper)) {
                 list = template.query(sqlstr, argpart, new BeanPropertyRowMapper<E>(mapper));
@@ -502,7 +513,9 @@ public class RDBManager implements IDBase {
             if (whereCase.getSqlpart().length() > 0) {
                 sqlpart.append(" where").append(whereCase.getSqlpart().substring(0, whereCase.getSqlpart().length() - 3));
             }
-            System.out.println(sqlpart.toString());
+            if (log.isDebugEnabled()) {
+                log.debug("sql msg: " + sqlpart.toString());
+            }
             return template.queryForObject(sqlpart.toString(), whereCase.getArgpart().toArray(), Long.class);
         } catch (Exception e) {
             throw new DbEx(e);
@@ -540,7 +553,9 @@ public class RDBManager implements IDBase {
             if (sortbyCase.getSqlpart().length() > 0) {
                 sqlpart.append(sortbyCase.getSqlpart());
             }
-            System.out.println(sqlpart.toString());
+            if (log.isDebugEnabled()) {
+                log.debug("sql msg: " + sqlpart.toString());
+            }
             return template.queryForObject(sqlpart.toString(), argpart, Integer.class);
         } catch (Exception e) {
             throw new DbEx(e);
