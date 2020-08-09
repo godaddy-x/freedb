@@ -11,17 +11,27 @@ import java.util.List;
  * @author shadow
  */
 public interface IDBase {
+
     // 保存数据
     public int save(IDEntity... entities) throws DbEx;
 
+    // 保存数据
+    public int save(List entities) throws DbEx;
+
     // 修改数据
     public int update(IDEntity... entities) throws DbEx;
+
+    // 修改数据
+    public int update(List entities) throws DbEx;
 
     // 按条件修改数据
     public int update(Cnd cnd) throws DbEx;
 
     // 通过对象删除数据
     public int delete(IDEntity... entities) throws DbEx;
+
+    // 通过对象删除数据
+    public int delete(List entities) throws DbEx;
 
     // 通过条件删除数据
     public int delete(Cnd cnd) throws DbEx;

@@ -134,6 +134,11 @@ public class RDBManager implements IDBase {
     }
 
     @Override
+    public int save(List entities) throws DbEx {
+        return save(listToArr(entities));
+    }
+
+    @Override
     public int update(IDEntity... entities) throws DbEx {
         if (entities == null) {
             throw new DbEx("invalid entity null");
@@ -190,6 +195,11 @@ public class RDBManager implements IDBase {
         } catch (Exception e) {
             throw new DbEx(e);
         }
+    }
+
+    @Override
+    public int update(List entities) throws DbEx {
+        return update(listToArr(entities));
     }
 
     @Override
@@ -281,6 +291,11 @@ public class RDBManager implements IDBase {
         } catch (Exception e) {
             throw new DbEx(e);
         }
+    }
+
+    @Override
+    public int delete(List entities) throws DbEx {
+        return delete(listToArr(entities));
     }
 
     @Override
@@ -753,6 +768,21 @@ public class RDBManager implements IDBase {
             }
         }
         return new CaseObject(sqlpart.toString(), null);
+    }
+
+    private IDEntity[] listToArr(List entities) throws DbEx {
+        if (entities == null || entities.size() == 0) {
+            throw new DbEx("invalid entity len");
+        }
+        IDEntity[] arr = new IDEntity[entities.size()];
+        for (int i = 0; i < entities.size(); i++) {
+            Object data = entities.get(i);
+            if (!(data instanceof IDEntity)) {
+                throw new DbEx("invalid IDEntity class");
+            }
+            arr[i] = (IDEntity) data;
+        }
+        return arr;
     }
 
 }

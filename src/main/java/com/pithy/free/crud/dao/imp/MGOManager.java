@@ -21,7 +21,17 @@ public class MGOManager implements IDBase {
     }
 
     @Override
+    public int save(List entities) throws DbEx {
+        return 0;
+    }
+
+    @Override
     public int update(IDEntity... entities) throws DbEx {
+        return 0;
+    }
+
+    @Override
+    public int update(List entities) throws DbEx {
         return 0;
     }
 
@@ -32,6 +42,11 @@ public class MGOManager implements IDBase {
 
     @Override
     public int delete(IDEntity... entities) throws DbEx {
+        return 0;
+    }
+
+    @Override
+    public int delete(List entities) throws DbEx {
         return 0;
     }
 
