@@ -1,8 +1,8 @@
 package com.pithy.free.crud.dao.imp;
 
-import com.pithy.free.crud.domain.*;
 import com.pithy.free.crud.aconst.MODE;
 import com.pithy.free.crud.dao.IDBase;
+import com.pithy.free.crud.domain.*;
 import com.pithy.free.crud.ex.DbEx;
 import com.pithy.free.pageable.Pagination;
 import com.pithy.free.pageable.dialect.Dialect;
@@ -86,7 +86,7 @@ public class RDBManager implements IDBase {
                 if (table == null) {
                     table = ReflectUtil.getTableValue(entity);
                 }
-                Field[] fields = entity.getClass().getDeclaredFields();
+                Field[] fields = ReflectUtil.getAllFields(entity);
                 List<Object> arg = new ArrayList<>(fields.length);
                 for (int j = 0; j < fields.length; j++) {
                     Field f = fields[j];
@@ -149,7 +149,7 @@ public class RDBManager implements IDBase {
                 IDEntity entity = entities[i];
                 TableObject table = ReflectUtil.getTableValue(entity);
                 Object pkValue = null;
-                Field[] fields = entity.getClass().getDeclaredFields();
+                Field[] fields = ReflectUtil.getAllFields(entity);
                 List<Object> argpart = new ArrayList<>(fields.length);
                 for (int j = 0; j < fields.length; j++) {
                     Field f = fields[j];
@@ -251,7 +251,7 @@ public class RDBManager implements IDBase {
                 if (table == null) {
                     table = ReflectUtil.getTableValue(entity);
                 }
-                Field[] fields = entity.getClass().getDeclaredFields();
+                Field[] fields = ReflectUtil.getAllFields(entity);
                 for (int j = 0; j < fields.length; j++) {
                     Field f = fields[j];
                     f.setAccessible(true);
@@ -347,7 +347,7 @@ public class RDBManager implements IDBase {
             IDEntity entity = cnd.getEntity();
             TableObject table = ReflectUtil.getTableValue(entity);
             if (cnd.getFields().size() == 0) {
-                Field[] fields = entity.getClass().getDeclaredFields();
+                Field[] fields = ReflectUtil.getAllFields(entity);
                 for (Field f : fields) {
                     f.setAccessible(true);
                     ColumnObject column = ReflectUtil.getColumnValue(f);

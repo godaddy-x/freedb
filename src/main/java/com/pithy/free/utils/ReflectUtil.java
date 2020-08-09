@@ -7,6 +7,9 @@ import com.pithy.free.crud.domain.TableObject;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class ReflectUtil {
 
@@ -20,17 +23,17 @@ public class ReflectUtil {
         return owner.getClass().getMethod(fieldName).invoke(owner);
     }
 
-//    public static String getTableValue(Object obj) throws Exception {
-//        try {
-//            String result = obj.getClass().getAnnotation(Table.class).name();
-//            if (result == null || result.length() == 0) {
-//                throw new Exception("invalid table name");
-//            }
-//            return result;
-//        } catch (NullPointerException e) {
-//            throw new Exception("invalid table annotation");
-//        }
-//    }
+    public static Field[] getAllFields(Object object) {
+        Class clazz = object.getClass();
+        List<Field> fieldList = new ArrayList<>();
+        while (clazz != null) {
+            fieldList.addAll(new ArrayList<>(Arrays.asList(clazz.getDeclaredFields())));
+            clazz = clazz.getSuperclass();
+        }
+        Field[] fields = new Field[fieldList.size()];
+        fieldList.toArray(fields);
+        return fields;
+    }
 
     public static TableObject getTableValue(Object clz) throws Exception {
         try {
