@@ -10,6 +10,7 @@ import com.pithy.free.sqlcode.condition.Cnd;
 import com.pithy.free.sqlcode.domain.Condition;
 import com.pithy.free.sqlcode.domain.Join;
 import com.pithy.free.sqlcode.domain.OrderBy;
+import com.pithy.free.sqlcode.utils.StringUtils;
 
 import java.util.*;
 
@@ -40,72 +41,108 @@ public class SQL implements Cnd {
 
     @Override
     public Cnd eq(String key, Object value) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(value)) {
+            return this;
+        }
         conditions.add(new Condition<>(OPT.EQ, key, value));
         return this;
     }
 
     @Override
     public Cnd noteq(String key, Object value) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(value)) {
+            return this;
+        }
         conditions.add(new Condition<>(OPT.NOT_EQ, key, value));
         return this;
     }
 
     @Override
     public Cnd lt(String key, Object value) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(value)) {
+            return this;
+        }
         conditions.add(new Condition<>(OPT.LT, key, value));
         return this;
     }
 
     @Override
     public Cnd lte(String key, Object value) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(value)) {
+            return this;
+        }
         conditions.add(new Condition<>(OPT.LTE, key, value));
         return this;
     }
 
     @Override
     public Cnd gt(String key, Object value) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(value)) {
+            return this;
+        }
         conditions.add(new Condition<>(OPT.GT, key, value));
         return this;
     }
 
     @Override
     public Cnd gte(String key, Object value) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(value)) {
+            return this;
+        }
         conditions.add(new Condition<>(OPT.GTE, key, value));
         return this;
     }
 
     @Override
     public Cnd isnull(String key) {
+        if (StringUtils.isEmpty(key)) {
+            return this;
+        }
         conditions.add(new Condition<Object>(OPT.IS_NULL, key, ""));
         return this;
     }
 
     @Override
     public Cnd notnull(String key) {
+        if (StringUtils.isEmpty(key)) {
+            return this;
+        }
         conditions.add(new Condition<Object>(OPT.IS_NOT_NULL, key, ""));
         return this;
     }
 
     @Override
     public Cnd between(String key, Object value1, Object value2) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(value1) || StringUtils.isEmpty(value2)) {
+            return this;
+        }
         conditions.add(new Condition<>(OPT.BETWEEN, key, Arrays.asList(value1, value2)));
         return this;
     }
 
     @Override
     public Cnd betweenDate(String key, Object value1, Object value2) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(value1) || StringUtils.isEmpty(value2)) {
+            return this;
+        }
         conditions.add(new Condition<>(OPT.BETWEEN2, key, Arrays.asList(value1, value2)));
         return this;
     }
 
     @Override
     public Cnd notbetween(String key, Object value1, Object value2) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(value1) || StringUtils.isEmpty(value2)) {
+            return this;
+        }
         conditions.add(new Condition<>(OPT.NOT_BETWEEN, key, Arrays.asList(value1, value2)));
         return this;
     }
 
     @Override
     public Cnd in(String key, Object... values) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(values) || values.length == 0) {
+            return this;
+        }
         if (values.length == 1 && values[0] instanceof List<?>) {
             conditions.add(new Condition<>(OPT.IN, key, (List<Object>) values[0]));
         } else {
@@ -116,14 +153,24 @@ public class SQL implements Cnd {
 
     @Override
     public Cnd in(String key, Object values) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(values)) {
+            return this;
+        }
         if (values instanceof List<?>) {
-            conditions.add(new Condition<>(OPT.IN, key, (List<Object>) values));
+            List<Object> list = (List<Object>) values;
+            if (list.size() == 0) {
+                return this;
+            }
+            conditions.add(new Condition<>(OPT.IN, key, list));
         }
         return this;
     }
 
     @Override
     public Cnd notin(String key, Object... values) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(values) || values.length == 0) {
+            return this;
+        }
         if (values.length == 1 && values[0] instanceof List<?>) {
             conditions.add(new Condition<>(OPT.NOT_IN, key, (List<Object>) values[0]));
         } else {
@@ -134,26 +181,42 @@ public class SQL implements Cnd {
 
     @Override
     public Cnd notin(String key, Object values) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(values)) {
+            return this;
+        }
         if (values instanceof List<?>) {
-            conditions.add(new Condition<>(OPT.NOT_IN, key, (List<Object>) values));
+            List<Object> list = (List<Object>) values;
+            if (list.size() == 0) {
+                return this;
+            }
+            conditions.add(new Condition<>(OPT.NOT_IN, key, list));
         }
         return this;
     }
 
     @Override
     public Cnd like(String key, Object value) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(value)) {
+            return this;
+        }
         conditions.add(new Condition<>(OPT.LIKE, key, value));
         return this;
     }
 
     @Override
     public Cnd notlike(String key, Object value) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(value)) {
+            return this;
+        }
         conditions.add(new Condition<>(OPT.NOT_LIKE, key, value));
         return this;
     }
 
     @Override
     public Cnd or(Cnd... cnds) {
+        if (StringUtils.isEmpty(cnds) || cnds.length == 0) {
+            return this;
+        }
         List<Object> values = new LinkedList<>();
         for (Cnd cnd : cnds) {
             values.add(cnd);
@@ -163,12 +226,23 @@ public class SQL implements Cnd {
     }
 
     @Override
+    public Cnd limit(Long pageSize) {
+        if (StringUtils.isEmpty(pageSize)) {
+            return this;
+        }
+        return limit(1l, pageSize, true);
+    }
+
+    @Override
     public Cnd limit(Long pageNo, Long pageSize) {
         return limit(pageNo, pageSize, true);
     }
 
     @Override
     public Cnd limit(Long pageNo, Long pageSize, boolean spilled) {
+        if (StringUtils.isEmpty(pageNo) && StringUtils.isEmpty(pageSize)) {
+            return this;
+        }
         if (pageNo == null || pageNo < 1) {
             pageNo = 1l;
         }
@@ -180,29 +254,20 @@ public class SQL implements Cnd {
     }
 
     @Override
-    public Cnd limit(Long pageSize) {
-        if (pageSize == null || pageSize < 1 || pageSize > 500) {
-            pageSize = 50l;
-        }
-        pagination = new SimplePagination<>(1l, pageSize, true);
-        return this;
-    }
-
-    @Override
     public Cnd offset(Long offset, Long limit) {
-        if (offset == null || offset < 0) {
-            offset = 0l;
+        if (StringUtils.isEmpty(offset) && StringUtils.isEmpty(limit)) {
+            return this;
         }
-        if (limit == null || limit < 1 || limit > 500) {
-            limit = 50l;
-        }
-        pagination = new SimplePagination<>(offset, limit);
+        limit(offset, limit, false);
         pagination.setOffset(true);
         return this;
     }
 
     @Override
     public Cnd groupby(String... keys) {
+        if (StringUtils.isEmpty(keys) || keys.length == 0) {
+            return this;
+        }
         for (String object : keys) {
             groupbys.add(object);
         }
@@ -211,13 +276,16 @@ public class SQL implements Cnd {
 
     @Override
     public Cnd orderby(String key, SortBy sortBy) {
+        if (StringUtils.isEmpty(key) || StringUtils.isEmpty(sortBy)) {
+            return this;
+        }
         orderbys.add(new OrderBy(key, sortBy));
         return this;
     }
 
     @Override
     public Cnd orderby(OrderBy... orderBys) {
-        if (orderBys == null || orderBys.length == 0) {
+        if (StringUtils.isEmpty(orderBys) || orderBys.length == 0) {
             return this;
         }
         for (OrderBy orderBy : orderBys) {
@@ -228,6 +296,9 @@ public class SQL implements Cnd {
 
     @Override
     public Cnd fields(String... keys) {
+        if (StringUtils.isEmpty(keys) || keys.length == 0) {
+            return this;
+        }
         for (String object : keys) {
             fields.add(object);
         }
@@ -251,17 +322,24 @@ public class SQL implements Cnd {
 
     @Override
     public Cnd upset(String[] keys, Object... values) {
-        if (keys != null && values != null && keys.length > 0 && keys.length == values.length) {
-            for (int i = 0; i < keys.length; i++) {
-                upsets.put(keys[i], values[i]);
-            }
+        if (StringUtils.isEmpty(keys) || keys.length == 0) {
+            return this;
+        }
+        if (StringUtils.isEmpty(values) || values.length == 0) {
+            return this;
+        }
+        if (keys.length != values.length) {
+            return this;
+        }
+        for (int i = 0; i < keys.length; i++) {
+            upsets.put(keys[i], values[i]);
         }
         return this;
     }
 
     @Override
     public Cnd leftJoin(Object entity, String alias, String join) {
-        if (entity == null || alias == null || join == null) {
+        if (StringUtils.isEmpty(entity) || StringUtils.isEmpty(alias) || StringUtils.isEmpty(join)) {
             return this;
         }
         joins.add(new Join(MODE.LEFT, entity, alias, join));
@@ -270,7 +348,7 @@ public class SQL implements Cnd {
 
     @Override
     public Cnd rightJoin(Object entity, String alias, String join) {
-        if (entity == null || alias == null || join == null) {
+        if (StringUtils.isEmpty(entity) || StringUtils.isEmpty(alias) || StringUtils.isEmpty(join)) {
             return this;
         }
         joins.add(new Join(MODE.RIGHT, entity, alias, join));
@@ -279,7 +357,7 @@ public class SQL implements Cnd {
 
     @Override
     public Cnd innerJoin(Object entity, String alias, String join) {
-        if (entity == null || alias == null || join == null) {
+        if (StringUtils.isEmpty(entity) || StringUtils.isEmpty(alias) || StringUtils.isEmpty(join)) {
             return this;
         }
         joins.add(new Join(MODE.INNER, entity, alias, join));

@@ -67,13 +67,13 @@ public interface Cnd {
     public Cnd or(Cnd... cnds);
 
     // 分页方法(根据数据库方言)
+    public Cnd limit(Long pageSize);
+
+    // 分页方法(根据数据库方言)
     public Cnd limit(Long pageNo, Long pageSize);
 
     // 分页方法(根据数据库方言)
     public Cnd limit(Long pageNo, Long pageSize, boolean spilled);
-
-    // 分页方法(根据数据库方言)
-    public Cnd limit(Long pageSize);
 
     // 分页方法(根据数据库方言)
     public Cnd offset(Long offset, Long limit);
