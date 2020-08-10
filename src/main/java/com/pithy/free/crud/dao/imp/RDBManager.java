@@ -14,6 +14,7 @@ import com.pithy.free.sqlcode.condition.imp.SQL;
 import com.pithy.free.sqlcode.domain.Condition;
 import com.pithy.free.sqlcode.domain.Join;
 import com.pithy.free.sqlcode.domain.OrderBy;
+import com.pithy.free.sqlcode.utils.DataTypeUtils;
 import com.pithy.free.utils.IdWorker;
 import com.pithy.free.utils.ReflectUtil;
 import org.slf4j.Logger;
@@ -22,7 +23,12 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -86,24 +92,18 @@ public class RDBManager implements IDBase {
                 if (table == null) {
                     table = ReflectUtil.getTableValue(entity);
                 }
-                Field[] fields = ReflectUtil.getAllFields(entity);
-                List<Object> arg = new ArrayList<>(fields.length);
-                for (int j = 0; j < fields.length; j++) {
-                    Field f = fields[j];
-                    f.setAccessible(true);
-                    ColumnObject column = ReflectUtil.getColumnValue(f);
-                    if (column.isIgnore()) { // 忽略字段跳过
-                        continue;
-                    }
-                    Object columnValue = f.get(entity);
-                    if (table.getPkName().equals(column.getName())) { // 自动填充ID字段跳过
-                        if (!dbConfig.isSnowflakeID()) {
+                List<ColumnObject> fields = table.getColumnObjects();
+                List<Object> arg = new ArrayList<>(fields.size());
+                for (ColumnObject column : fields) {
+                    Object columnValue = ReflectUtil.getFieldValue(entity, column.getClassType(), column.getMdName());
+                    if (column.isPK()) { // PK字段
+                        if (!dbConfig.isSnowflakeID()) { // 自动填充ID字段跳过
                             continue;
                         }
                         if (columnValue == null) {
-                            if ("java.lang.Long".equals(f.getType().getName())) {
+                            if (Long.class == column.getFieldType()) {
                                 columnValue = IdWorker.getLID();
-                            } else if ("java.lang.String".equals(f.getType().getName())) {
+                            } else if (String.class == column.getFieldType()) {
                                 columnValue = IdWorker.getSID();
                             } else {
                                 throw new DbEx("invalid entity id type");
@@ -111,7 +111,7 @@ public class RDBManager implements IDBase {
                         }
                     }
                     if (i == 0) {
-                        part1.append(column.getName()).append(",");
+                        part1.append(column.getDbName()).append(",");
                         part2.append("?,");
                     }
                     arg.add(columnValue);
@@ -154,27 +154,21 @@ public class RDBManager implements IDBase {
                 IDEntity entity = entities[i];
                 TableObject table = ReflectUtil.getTableValue(entity);
                 Object pkValue = null;
-                Field[] fields = ReflectUtil.getAllFields(entity);
-                List<Object> argpart = new ArrayList<>(fields.length);
-                for (int j = 0; j < fields.length; j++) {
-                    Field f = fields[j];
-                    f.setAccessible(true);
-                    ColumnObject column = ReflectUtil.getColumnValue(f);
-                    if (column.isIgnore()) { // 忽略字段跳过
-                        continue;
-                    }
-                    Object columnValue = f.get(entity);
-                    if (column.getName().equals(table.getPkName())) {
+                List<ColumnObject> fields = table.getColumnObjects();
+                List<Object> argpart = new ArrayList<>(fields.size());
+                for (ColumnObject column : fields) {
+                    Object columnValue = ReflectUtil.getFieldValue(entity, column.getClassType(), column.getMdName());
+                    if (column.isPK()) { // 主键字段为空抛出异常
                         if (columnValue == null) {
                             throw new NullPointerException("invalid pk value");
                         }
                         pkValue = columnValue;
-                        part2.append(column.getName()).append("=?");
+                        part2.append(column.getDbName()).append("=?");
                     } else {
                         if (columnValue == null) {
                             continue;
                         }
-                        part1.append(column.getName()).append("=?,");
+                        part1.append(column.getDbName()).append("=?,");
                         argpart.add(columnValue);
                     }
                 }
@@ -261,16 +255,9 @@ public class RDBManager implements IDBase {
                 if (table == null) {
                     table = ReflectUtil.getTableValue(entity);
                 }
-                Field[] fields = ReflectUtil.getAllFields(entity);
-                for (int j = 0; j < fields.length; j++) {
-                    Field f = fields[j];
-                    f.setAccessible(true);
-                    ColumnObject column = ReflectUtil.getColumnValue(f);
-                    if (column.isIgnore()) {
-                        continue;
-                    }
-                    Object columnValue = f.get(entity);
-                    if (column.getName().equals(table.getPkName())) {
+                for (ColumnObject column : table.getColumnObjects()) {
+                    Object columnValue = ReflectUtil.getFieldValue(entity, column.getClassType(), column.getMdName());
+                    if (column.isPK()) {
                         if (columnValue == null) {
                             throw new NullPointerException("invalid pk value");
                         }
@@ -357,22 +344,19 @@ public class RDBManager implements IDBase {
         if (cnd == null || cnd.getEntity() == null) {
             throw new DbEx("invalid cnd or entity");
         }
+        String sqlstr = null;
+        Object[] argpart = null;
+        long start = System.currentTimeMillis();
         try {
             StringBuffer part1 = new StringBuffer();
             IDEntity entity = cnd.getEntity();
             TableObject table = ReflectUtil.getTableValue(entity);
             if (cnd.getFields().size() == 0) {
-                Field[] fields = ReflectUtil.getAllFields(entity);
-                for (Field f : fields) {
-                    f.setAccessible(true);
-                    ColumnObject column = ReflectUtil.getColumnValue(f);
-                    if (column.isIgnore()) {
-                        continue;
-                    }
-                    if (column.getName().equals(f.getName())) {
-                        part1.append(column.getName()).append(",");
+                for (ColumnObject column : table.getColumnObjects()) {
+                    if (column.getDbName().equals(column.getMdName())) {
+                        part1.append(column.getDbName()).append(",");
                     } else {
-                        part1.append(column.getName()).append(" as ").append(f.getName()).append(",");
+                        part1.append(column.getDbName()).append(" as ").append(column.getMdName()).append(",");
                     }
                 }
             } else {
@@ -388,7 +372,7 @@ public class RDBManager implements IDBase {
             }
             CaseObject whereCase = buildWhereCase(cnd);
             StringBuffer sqlpart = new StringBuffer();
-            Object[] argpart = whereCase.getArgpart().toArray();
+            argpart = whereCase.getArgpart().toArray();
             sqlpart.append("select ").append(part1.substring(0, part1.length() - 1)).append(" from ").append(table.getTableName()).append(" ");
             if (whereCase.getSqlpart().length() > 0) {
                 sqlpart.append("where").append(whereCase.getSqlpart().substring(0, whereCase.getSqlpart().length() - 3));
@@ -402,7 +386,7 @@ public class RDBManager implements IDBase {
                 sqlpart.append(sortbyCase.getSqlpart());
             }
             Pagination<E> pagination = null;
-            String sqlstr = sqlpart.toString();
+            sqlstr = sqlpart.toString();
             CaseObject pageObj = buildPagination(cnd, sqlstr, argpart);
             if (pageObj != null) { // normal query list
                 sqlstr = pageObj.getSqlpart();
@@ -426,6 +410,8 @@ public class RDBManager implements IDBase {
             return pagination;
         } catch (Exception e) {
             throw new DbEx(e);
+        } finally {
+            slowQuery(start, sqlstr, argpart);
         }
     }
 
@@ -451,6 +437,9 @@ public class RDBManager implements IDBase {
         if (cnd.getEntityAlias() == null || cnd.getEntityAlias().length() == 0) {
             throw new DbEx("invalid entity alias");
         }
+        String sqlstr = null;
+        Object[] argpart = null;
+        long start = System.currentTimeMillis();
         try {
             StringBuffer part1 = new StringBuffer();
             IDEntity entity = cnd.getEntity();
@@ -469,7 +458,7 @@ public class RDBManager implements IDBase {
             TableObject table = ReflectUtil.getTableValue(entity);
             CaseObject whereCase = buildWhereCase(cnd);
             StringBuffer sqlpart = new StringBuffer();
-            Object[] argpart = whereCase.getArgpart().toArray();
+            argpart = whereCase.getArgpart().toArray();
             sqlpart.append("select ").append(part1.substring(0, part1.length() - 1)).append(" from ").append(table.getTableName()).append(" ").append(cnd.getEntityAlias()).append(" ");
             CaseObject joinCase = buildJoinCase(cnd);
             if (joinCase.getSqlpart().length() > 0) {
@@ -487,7 +476,7 @@ public class RDBManager implements IDBase {
                 sqlpart.append(sortbyCase.getSqlpart());
             }
             Pagination<E> pagination = null;
-            String sqlstr = sqlpart.toString();
+            sqlstr = sqlpart.toString();
             CaseObject pageObj = buildPagination(cnd, sqlstr, argpart);
             if (pageObj != null) { // normal query list
                 sqlstr = pageObj.getSqlpart();
@@ -511,6 +500,8 @@ public class RDBManager implements IDBase {
             return pagination;
         } catch (Exception e) {
             throw new DbEx(e);
+        } finally {
+            slowQuery(start, sqlstr, argpart);
         }
     }
 
@@ -519,6 +510,9 @@ public class RDBManager implements IDBase {
         if (cnd == null || cnd.getEntity() == null) {
             throw new DbEx("invalid cnd or entity");
         }
+        String sqlstr = null;
+        Object[] argpart = null;
+        long start = System.currentTimeMillis();
         try {
             IDEntity entity = cnd.getEntity();
             TableObject table = ReflectUtil.getTableValue(entity);
@@ -528,12 +522,16 @@ public class RDBManager implements IDBase {
             if (whereCase.getSqlpart().length() > 0) {
                 sqlpart.append(" where").append(whereCase.getSqlpart().substring(0, whereCase.getSqlpart().length() - 3));
             }
+            sqlstr = sqlpart.toString();
+            argpart = whereCase.getArgpart().toArray();
             if (log.isDebugEnabled()) {
-                log.debug("sql msg: " + sqlpart.toString());
+                log.debug("sql msg: " + sqlstr);
             }
-            return template.queryForObject(sqlpart.toString(), whereCase.getArgpart().toArray(), Long.class);
+            return template.queryForObject(sqlstr, argpart, Long.class);
         } catch (Exception e) {
             throw new DbEx(e);
+        } finally {
+            slowQuery(start, sqlstr, argpart);
         }
     }
 
@@ -545,13 +543,15 @@ public class RDBManager implements IDBase {
         if (cnd.getEntityAlias() == null || cnd.getEntityAlias().length() == 0) {
             throw new DbEx("invalid entity alias");
         }
+        String sqlstr = null;
+        Object[] argpart = null;
+        long start = System.currentTimeMillis();
         try {
-            StringBuffer part1 = new StringBuffer();
             IDEntity entity = cnd.getEntity();
             TableObject table = ReflectUtil.getTableValue(entity);
             CaseObject whereCase = buildWhereCase(cnd);
             StringBuffer sqlpart = new StringBuffer();
-            Object[] argpart = whereCase.getArgpart().toArray();
+            argpart = whereCase.getArgpart().toArray();
             sqlpart.append("select count(1) from ").append(table.getTableName()).append(" ").append(cnd.getEntityAlias()).append(" ");
             CaseObject joinCase = buildJoinCase(cnd);
             if (joinCase.getSqlpart().length() > 0) {
@@ -568,12 +568,15 @@ public class RDBManager implements IDBase {
             if (sortbyCase.getSqlpart().length() > 0) {
                 sqlpart.append(sortbyCase.getSqlpart());
             }
+            sqlstr = sqlpart.toString();
             if (log.isDebugEnabled()) {
                 log.debug("sql msg: " + sqlpart.toString());
             }
-            return template.queryForObject(sqlpart.toString(), argpart, Integer.class);
+            return template.queryForObject(sqlstr, argpart, Integer.class);
         } catch (Exception e) {
             throw new DbEx(e);
+        } finally {
+            slowQuery(start, sqlstr, argpart);
         }
     }
 
@@ -783,6 +786,21 @@ public class RDBManager implements IDBase {
             arr[i] = (IDEntity) data;
         }
         return arr;
+    }
+
+    private void slowQuery(long start, String sqlpart, Object[] argpart) {
+        long qtime = dbConfig.getSlowQuery();
+        if (qtime <= 0) {
+            return;
+        }
+        long subtime = System.currentTimeMillis() - start;
+        if (subtime < qtime) {
+            return;
+        }
+        sqlpart = sqlpart == null ? "" : sqlpart;
+        argpart = argpart == null ? new Object[]{} : argpart;
+        sqlpart = sqlpart.replaceAll("\\?", "%s");
+        log.warn(new StringBuffer(">>>>>> slowSql >>>>>> ").append(String.format(sqlpart, DataTypeUtils.objectToStringArr(argpart))).append(" >>>>>> cost >>>>>> ").append(subtime).append(" ms").toString());
     }
 
 }

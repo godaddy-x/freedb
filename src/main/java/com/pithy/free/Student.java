@@ -7,7 +7,7 @@ import com.pithy.free.crud.domain.IDEntity;
 import java.util.Date;
 
 @Table(name = "student", pk = "id")
-public class Student implements IDEntity {
+public class Student extends StudentBase implements IDEntity {
 
     private Long id;
     @Column(name = "name")
