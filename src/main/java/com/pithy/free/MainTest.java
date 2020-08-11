@@ -46,26 +46,26 @@ public class MainTest {
         student1.setCreateAt(new Date());
         IDBase manager = new RDBManager(initJdbcTemplate(), new DBConfig(100));
         try {
-//            manager.save(student, student1);
-//            manager.update(student, student1);
-//            manager.update(new SQL(Student.class)
-//                    .eq("id", 1)
-//                    .upset(new String[]{"id", "name", "createAt"}, 1, "王武111", new Date()));
-//            manager.delete(student, student1);
-//            manager.delete(new SQL(Student.class)
-//                    .in("id", 1291716720588791809l, 2, 12, 13));
-//            manager.count(new SQL(Student.class).eq("id", 1));
-//            Student s = manager.findByPK(3, Student.class);
+            manager.save(student, student1);
+            manager.update(student, student1);
+            manager.update(new SQL(Student.class)
+                    .eq("id", 1)
+                    .upset(new String[]{"id", "name", "createAt"}, 1, "王武111", new Date()));
+            manager.delete(student, student1);
+            manager.delete(new SQL(Student.class)
+                    .in("id", 1291716720588791809l, 2, 12, 13));
+            manager.count(new SQL(Student.class).eq("id", 1));
+            Student s = manager.findByPK(3, Student.class);
             manager.findPage(new SQL(Student.class));
-//            manager.findList(new SQL(Student.class).fields("name as name1")
-//                            .or(new SQL().eq("id", 3), new SQL().in("id", 4, 21))
-//                            .groupby("id").orderby("id", SortBy.A)
-//                    , String.class);
-//            manager.countComplex(new SQL(Student.class, "a")
-//                    .fields("count(a.name) id")
-//                    .eq("a.id", 1291716720588791810l).between("createAt", LocalDate.now(), LocalDate.now()));
-//            manager.countComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
-//            manager.findListComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
+            manager.findList(new SQL(Student.class).fields("name as name1")
+                            .or(new SQL().eq("id", 3), new SQL().in("id", 4, 21))
+                            .groupby("id").orderby("id", SortBy.A)
+                    , String.class);
+            manager.countComplex(new SQL(Student.class, "a")
+                    .fields("count(a.name) id")
+                    .eq("a.id", 1291716720588791810l).between("createAt", LocalDate.now(), LocalDate.now()));
+            manager.countComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
+            manager.findListComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
             System.out.println("----");
         } catch (DbEx dbEx) {
             dbEx.printStackTrace();

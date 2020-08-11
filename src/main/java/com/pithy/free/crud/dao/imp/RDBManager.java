@@ -82,6 +82,7 @@ public class RDBManager implements IDBase {
         if (entities.length == 0 || entities.length > 1000) {
             throw new DbEx("invalid entity len range 1-1000");
         }
+        String sqlstr = null;
         TableObject table = null;
         List<Object[]> argpart = new ArrayList<>(entities.length);
         StringBuffer part1 = new StringBuffer();
@@ -121,15 +122,18 @@ public class RDBManager implements IDBase {
             if (part1.length() == 0) {
                 throw new DbEx("invalid entity field len");
             }
-            StringBuffer sqlstr = new StringBuffer().append("insert into ").append(table.getTableName()).append(" (");
-            sqlstr.append(part1.substring(0, part1.length() - 1)).append(") values (").append(part2.substring(0, part2.length() - 1)).append(")");
-            if (log.isDebugEnabled()) {
-                log.debug("sql msg: " + sqlstr.toString());
+            sqlstr = new StringBuffer().append("insert into ").append(table.getTableName()).append(" (").
+                    append(part1.substring(0, part1.length() - 1)).append(") values (")
+                    .append(part2.substring(0, part2.length() - 1)).append(")").toString();
+            int[] ret = template.batchUpdate(sqlstr, argpart);
+            if (ret != null) {
+                return ret.length;
             }
-            int[] ret = template.batchUpdate(sqlstr.toString(), argpart);
-            return ret.length;
+            return 0;
         } catch (Exception e) {
             throw new DbEx(e);
+        } finally {
+            logSqlHandle(0, sqlstr, argpart.toArray());
         }
     }
 
@@ -146,6 +150,8 @@ public class RDBManager implements IDBase {
         if (entities.length == 0 || entities.length > 1000) {
             throw new DbEx("invalid entity len range 1-1000");
         }
+        String sqlstr = null;
+        List<Object> arglist = new ArrayList<>();
         int ret = 0;
         try {
             for (int i = 0; i < entities.length; i++) {
@@ -170,24 +176,24 @@ public class RDBManager implements IDBase {
                         }
                         part1.append(column.getDbName()).append("=?,");
                         argpart.add(columnValue);
+                        arglist.add(columnValue);
                     }
                 }
                 if (part1.length() == 0) {
                     throw new DbEx("invalid entity field len");
                 }
                 argpart.add(pkValue);
-                StringBuffer sqlstr = new StringBuffer().append("update ").append(table.getTableName()).append(" set ");
-                sqlstr.append(part1.substring(0, part1.length() - 1)).append(" where ").append(part2);
-                if (log.isDebugEnabled()) {
-                    log.debug("sql msg: " + sqlstr.toString());
-                }
-                if (template.update(sqlstr.toString(), argpart.toArray()) > 0) {
+                sqlstr = new StringBuffer().append("update ").append(table.getTableName()).append(" set ")
+                        .append(part1.substring(0, part1.length() - 1)).append(" where ").append(part2).toString();
+                if (template.update(sqlstr, argpart.toArray()) > 0) {
                     ret++;
                 }
             }
             return ret;
         } catch (Exception e) {
             throw new DbEx(e);
+        } finally {
+            logSqlHandle(0, sqlstr, arglist.toArray());
         }
     }
 
@@ -201,6 +207,8 @@ public class RDBManager implements IDBase {
         if (cnd == null || cnd.getEntityClass() == null) {
             throw new DbEx("invalid cnd or entity");
         }
+        String sqlstr = null;
+        Object[] argList = new Object[]{};
         try {
             StringBuffer part1 = new StringBuffer();
             TableObject table = ReflectUtil.getTableValue(cnd.getEntityClass());
@@ -226,14 +234,14 @@ public class RDBManager implements IDBase {
             if (whereCase.getSqlpart().length() == 0) {
                 throw new DbEx("invalid upset condition must than 0");
             }
-            sqlpart.append("update ").append(table.getTableName()).append(" set ").append(part1.substring(0, part1.length() - 1)).append(" where").append(whereCase.getSqlpart().substring(0, whereCase.getSqlpart().length() - 3));
+            sqlstr = sqlpart.append("update ").append(table.getTableName()).append(" set ").append(part1.substring(0, part1.length() - 1)).append(" where").append(whereCase.getSqlpart().substring(0, whereCase.getSqlpart().length() - 3)).toString();
             argpart.addAll(whereCase.getArgpart());
-            if (log.isDebugEnabled()) {
-                log.debug("sql msg: " + sqlpart.toString());
-            }
-            return template.update(sqlpart.toString(), argpart.toArray());
+            argList = argpart.toArray();
+            return template.update(sqlstr, argList);
         } catch (Exception e) {
             throw new DbEx(e);
+        } finally {
+            logSqlHandle(0, sqlstr, argList);
         }
     }
 
@@ -245,6 +253,7 @@ public class RDBManager implements IDBase {
         if (entities.length == 0 || entities.length > 1000) {
             throw new DbEx("invalid entity len range 1-1000");
         }
+        String sqlstr = null;
         TableObject table = null;
         StringBuffer part1 = new StringBuffer();
         List<Object> argList = new ArrayList<>(entities.length);
@@ -266,13 +275,12 @@ public class RDBManager implements IDBase {
             if (part1.length() == 0) {
                 throw new DbEx("invalid entity field len");
             }
-            StringBuffer sqlstr = new StringBuffer().append("delete from ").append(table.getTableName()).append(" where ").append(table.getPkName()).append(" in (").append(part1.substring(0, part1.length() - 1)).append(")");
-            if (log.isDebugEnabled()) {
-                log.debug("sql msg: " + sqlstr.toString());
-            }
-            return template.update(sqlstr.toString(), argList.toArray());
+            sqlstr = new StringBuffer().append("delete from ").append(table.getTableName()).append(" where ").append(table.getPkName()).append(" in (").append(part1.substring(0, part1.length() - 1)).append(")").toString();
+            return template.update(sqlstr, argList.toArray());
         } catch (Exception e) {
             throw new DbEx(e);
+        } finally {
+            logSqlHandle(0, sqlstr, argList.toArray());
         }
     }
 
@@ -286,6 +294,8 @@ public class RDBManager implements IDBase {
         if (cnd == null || cnd.getEntityClass() == null) {
             throw new DbEx("invalid cnd or entity");
         }
+        String sqlstr = null;
+        Object[] argList = null;
         try {
             TableObject table = ReflectUtil.getTableValue(cnd.getEntityClass());
             if (cnd.getConditions().size() == 0) {
@@ -297,14 +307,14 @@ public class RDBManager implements IDBase {
             if (whereCase.getSqlpart().length() == 0) {
                 throw new DbEx("invalid delete condition must than 0");
             }
-            sqlpart.append("delete from ").append(table.getTableName()).append(" where").append(whereCase.getSqlpart().substring(0, whereCase.getSqlpart().length() - 3));
+            sqlstr = sqlpart.append("delete from ").append(table.getTableName()).append(" where").append(whereCase.getSqlpart().substring(0, whereCase.getSqlpart().length() - 3)).toString();
             argpart.addAll(whereCase.getArgpart());
-            if (log.isDebugEnabled()) {
-                log.debug("sql msg: " + sqlpart.toString());
-            }
-            return template.update(sqlpart.toString(), argpart.toArray());
+            argList = argpart.toArray();
+            return template.update(sqlstr, argList);
         } catch (Exception e) {
             throw new DbEx(e);
+        } finally {
+            logSqlHandle(0, sqlstr, argList);
         }
     }
 
@@ -397,9 +407,6 @@ public class RDBManager implements IDBase {
             } else {
                 pagination = new SimplePagination<>();
             }
-            if (log.isDebugEnabled()) {
-                log.debug("sql msg: " + sqlstr);
-            }
             if (mapper == null) {
                 mapper = cnd.getEntityClass();
             }
@@ -417,7 +424,7 @@ public class RDBManager implements IDBase {
         } catch (Exception e) {
             throw new DbEx(e);
         } finally {
-            slowQuery(start, sqlstr, argpart);
+            logSqlHandle(start, sqlstr, argpart);
         }
     }
 
@@ -504,9 +511,6 @@ public class RDBManager implements IDBase {
             } else {
                 pagination = new SimplePagination<>();
             }
-            if (log.isDebugEnabled()) {
-                log.debug("sql msg: " + sqlstr);
-            }
             if (mapper == null) {
                 mapper = cnd.getEntityClass();
             }
@@ -524,7 +528,7 @@ public class RDBManager implements IDBase {
         } catch (Exception e) {
             throw new DbEx(e);
         } finally {
-            slowQuery(start, sqlstr, argpart);
+            logSqlHandle(start, sqlstr, argpart);
         }
     }
 
@@ -546,14 +550,11 @@ public class RDBManager implements IDBase {
             }
             sqlstr = sqlpart.toString();
             argpart = whereCase.getArgpart().toArray();
-            if (log.isDebugEnabled()) {
-                log.debug("sql msg: " + sqlstr);
-            }
             return template.queryForObject(sqlstr, argpart, Long.class);
         } catch (Exception e) {
             throw new DbEx(e);
         } finally {
-            slowQuery(start, sqlstr, argpart);
+            logSqlHandle(start, sqlstr, argpart);
         }
     }
 
@@ -590,14 +591,11 @@ public class RDBManager implements IDBase {
                 sqlpart.append(sortbyCase.getSqlpart());
             }
             sqlstr = sqlpart.toString();
-            if (log.isDebugEnabled()) {
-                log.debug("sql msg: " + sqlpart.toString());
-            }
             return template.queryForObject(sqlstr, argpart, Integer.class);
         } catch (Exception e) {
             throw new DbEx(e);
         } finally {
-            slowQuery(start, sqlstr, argpart);
+            logSqlHandle(start, sqlstr, argpart);
         }
     }
 
@@ -809,7 +807,13 @@ public class RDBManager implements IDBase {
         return arr;
     }
 
-    private void slowQuery(long start, String sqlpart, Object[] argpart) {
+    private void logSqlHandle(long start, String sqlpart, Object[] argpart) {
+        if (log.isDebugEnabled()) {
+            log.warn(new StringBuffer(">>>>>> printSql >>>>>> ").append(sqlpart).toString());
+        }
+        if (start == 0) {
+            return;
+        }
         long qtime = dbConfig.getSlowQuery();
         if (qtime <= 0) {
             return;
