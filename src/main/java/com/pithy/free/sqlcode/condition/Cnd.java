@@ -1,6 +1,5 @@
 package com.pithy.free.sqlcode.condition;
 
-import com.pithy.free.crud.domain.IDEntity;
 import com.pithy.free.pageable.Pagination;
 import com.pithy.free.sqlcode.aconst.SortBy;
 import com.pithy.free.sqlcode.domain.Condition;
@@ -111,7 +110,7 @@ public interface Cnd {
 
     public void setPagination(Pagination<Object> pagination);
 
-    public IDEntity getEntity();
+    public Class getEntityClass();
 
     public List<String> getGroupbys();
 

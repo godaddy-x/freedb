@@ -33,8 +33,8 @@ public class MainTest {
     public static void main(String[] args) {
         TableClassLoader.registry("com.pithy.free");
         Student student = new Student();
-        student.setId(6l);
-        student.setName1("张三1");
+        student.setId(1l);
+        student.setName1("张三1111");
         student.setSex(2);
         student.setAdmin(true);
         student.setUpdateAt(new Date());
@@ -48,24 +48,25 @@ public class MainTest {
         try {
 //            manager.save(student, student1);
 //            manager.update(student, student1);
-//            manager.update(new SQL(new Student())
-//                    .eq("id", 6)
+//            manager.update(new SQL(Student.class)
+//                    .eq("id", 1)
 //                    .upset(new String[]{"id", "name", "createAt"}, 1, "王武111", new Date()));
 //            manager.delete(student, student1);
-//            manager.delete(new SQL(new Student())
+//            manager.delete(new SQL(Student.class)
 //                    .in("id", 1291716720588791809l, 2, 12, 13));
-//            manager.count(new SQL(new Student()).eq("id", 1));
-//            Student s = manager.findByPK(1291716720588791810l, Student.class);
-//            manager.findPage(new SQL(new Student()), Student.class);
-//            manager.findList(new SQL(new Student())
-//                            .or(new SQL().eq("id", 6), new SQL().in("id", 20, 21))
+//            manager.count(new SQL(Student.class).eq("id", 1));
+//            Student s = manager.findByPK(3, Student.class);
+            manager.findPage(new SQL(Student.class));
+//            manager.findList(new SQL(Student.class).fields("name as name1")
+//                            .or(new SQL().eq("id", 3), new SQL().in("id", 4, 21))
 //                            .groupby("id").orderby("id", SortBy.A)
 //                    , String.class);
-            long ret = manager.countComplex(new SQL(new Student(), "a")
-                    .fields("count(a.name) id")
-                    .eq("a.id", 1291716720588791810l).between("createAt", LocalDate.now(), LocalDate.now()));
-//            System.out.println(ret);
-//            System.out.println("----");
+//            manager.countComplex(new SQL(Student.class, "a")
+//                    .fields("count(a.name) id")
+//                    .eq("a.id", 1291716720588791810l).between("createAt", LocalDate.now(), LocalDate.now()));
+//            manager.countComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
+//            manager.findListComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
+            System.out.println("----");
         } catch (DbEx dbEx) {
             dbEx.printStackTrace();
         }

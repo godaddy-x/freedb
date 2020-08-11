@@ -11,6 +11,6 @@ public @interface Table {
     String name() default "";
 
     // 主键名
-    String pk() default "";
+    String pk() default "id";
 
 }

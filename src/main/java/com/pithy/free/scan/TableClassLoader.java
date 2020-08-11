@@ -22,7 +22,13 @@ public class TableClassLoader {
         if (object == null) {
             throw new DbEx("invalid object null");
         }
-        TableObject tableObject = tableObjectMap.get(object.getClass().getName());
+        Class clz = object.getClass();
+        if (clz == Class.class) {
+            clz = (Class) object;
+        } else {
+            clz = object.getClass();
+        }
+        TableObject tableObject = tableObjectMap.get(clz.getName());
         if (tableObject == null) {
             throw new DbEx("invalid table class null");
         }
@@ -74,6 +80,7 @@ public class TableClassLoader {
                     columnObject.setFieldType(field.getType());
                     if (pkName.equals(columnObject.getDbName())) {
                         columnObject.setPK(true);
+                        tableObject.setPkColumn(columnObject);
                     }
                     columnObjects.add(columnObject);
                 }

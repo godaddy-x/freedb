@@ -198,13 +198,12 @@ public class RDBManager implements IDBase {
 
     @Override
     public int update(Cnd cnd) throws DbEx {
-        if (cnd == null || cnd.getEntity() == null) {
+        if (cnd == null || cnd.getEntityClass() == null) {
             throw new DbEx("invalid cnd or entity");
         }
         try {
             StringBuffer part1 = new StringBuffer();
-            IDEntity entity = cnd.getEntity();
-            TableObject table = ReflectUtil.getTableValue(entity);
+            TableObject table = ReflectUtil.getTableValue(cnd.getEntityClass());
             if (cnd.getUpsets().size() == 0) {
                 throw new DbEx("invalid upset field");
             }
@@ -255,17 +254,14 @@ public class RDBManager implements IDBase {
                 if (table == null) {
                     table = ReflectUtil.getTableValue(entity);
                 }
-                for (ColumnObject column : table.getColumnObjects()) {
-                    Object columnValue = ReflectUtil.getFieldValue(entity, column.getClassType(), column.getMdName());
-                    if (column.isPK()) {
-                        if (columnValue == null) {
-                            throw new NullPointerException("invalid pk value");
-                        }
-                        part1.append("?,");
-                        argList.add(columnValue);
-                        break;
-                    }
+                ColumnObject pkColumn = table.getPkColumn();
+                Object columnValue = ReflectUtil.getFieldValue(entity, pkColumn.getClassType(), pkColumn.getMdName());
+                if (columnValue == null) {
+                    throw new NullPointerException("invalid pk column value null");
                 }
+                part1.append("?,");
+                argList.add(columnValue);
+
             }
             if (part1.length() == 0) {
                 throw new DbEx("invalid entity field len");
@@ -287,13 +283,11 @@ public class RDBManager implements IDBase {
 
     @Override
     public int delete(Cnd cnd) throws DbEx {
-        if (cnd == null || cnd.getEntity() == null) {
+        if (cnd == null || cnd.getEntityClass() == null) {
             throw new DbEx("invalid cnd or entity");
         }
         try {
-            StringBuffer part1 = new StringBuffer();
-            IDEntity entity = cnd.getEntity();
-            TableObject table = ReflectUtil.getTableValue(entity);
+            TableObject table = ReflectUtil.getTableValue(cnd.getEntityClass());
             if (cnd.getConditions().size() == 0) {
                 throw new DbEx("invalid where case must than 0");
             }
@@ -316,13 +310,13 @@ public class RDBManager implements IDBase {
 
     @Override
     public <E> E findByPK(Object pkval, Class<E> mapper) throws DbEx {
-        try {
-            Object obj = mapper.newInstance();
-            TableObject table = ReflectUtil.getTableValue(obj);
-            return findOne(new SQL((IDEntity) obj).eq(table.getPkName(), pkval), mapper);
-        } catch (Exception e) {
-            throw new DbEx(e);
-        }
+        TableObject table = ReflectUtil.getTableValue(mapper);
+        return findOne(new SQL(mapper).eq(table.getPkName(), pkval), mapper);
+    }
+
+    @Override
+    public <E> E findOne(Cnd cnd) throws DbEx {
+        return findOne(cnd, null);
     }
 
     @Override
@@ -335,13 +329,23 @@ public class RDBManager implements IDBase {
     }
 
     @Override
+    public <E> List<E> findList(Cnd cnd) throws DbEx {
+        return findList(cnd, null);
+    }
+
+    @Override
     public <E> List<E> findList(Cnd cnd, Class<E> mapper) throws DbEx {
         return findPage(cnd, mapper).getData();
     }
 
     @Override
+    public <E> Pagination<E> findPage(Cnd cnd) throws DbEx {
+        return findPage(cnd, null);
+    }
+
+    @Override
     public <E> Pagination<E> findPage(Cnd cnd, Class<E> mapper) throws DbEx {
-        if (cnd == null || cnd.getEntity() == null) {
+        if (cnd == null || cnd.getEntityClass() == null) {
             throw new DbEx("invalid cnd or entity");
         }
         String sqlstr = null;
@@ -349,8 +353,7 @@ public class RDBManager implements IDBase {
         long start = System.currentTimeMillis();
         try {
             StringBuffer part1 = new StringBuffer();
-            IDEntity entity = cnd.getEntity();
-            TableObject table = ReflectUtil.getTableValue(entity);
+            TableObject table = ReflectUtil.getTableValue(cnd.getEntityClass());
             if (cnd.getFields().size() == 0) {
                 for (ColumnObject column : table.getColumnObjects()) {
                     if (column.getDbName().equals(column.getMdName())) {
@@ -397,6 +400,9 @@ public class RDBManager implements IDBase {
             if (log.isDebugEnabled()) {
                 log.debug("sql msg: " + sqlstr);
             }
+            if (mapper == null) {
+                mapper = cnd.getEntityClass();
+            }
             List<E> list = null;
             if (IDEntity.class.isAssignableFrom(mapper)) {
                 list = template.query(sqlstr, argpart, new BeanPropertyRowMapper<E>(mapper));
@@ -416,6 +422,11 @@ public class RDBManager implements IDBase {
     }
 
     @Override
+    public <E> E findOneComplex(Cnd cnd) throws DbEx {
+        return findOneComplex(cnd, null);
+    }
+
+    @Override
     public <E> E findOneComplex(Cnd cnd, Class<E> mapper) throws DbEx {
         List<E> list = findListComplex(cnd.offset(0l, 1l), mapper);
         if (list == null || list.size() == 0) {
@@ -425,13 +436,23 @@ public class RDBManager implements IDBase {
     }
 
     @Override
+    public <E> List<E> findListComplex(Cnd cnd) throws DbEx {
+        return findListComplex(cnd, null);
+    }
+
+    @Override
     public <E> List<E> findListComplex(Cnd cnd, Class<E> mapper) throws DbEx {
         return findPageComplex(cnd, mapper).getData();
     }
 
     @Override
+    public <E> Pagination<E> findPageComplex(Cnd cnd) throws DbEx {
+        return findPageComplex(cnd, null);
+    }
+
+    @Override
     public <E> Pagination<E> findPageComplex(Cnd cnd, Class<E> mapper) throws DbEx {
-        if (cnd == null || cnd.getEntity() == null) {
+        if (cnd == null || cnd.getEntityClass() == null) {
             throw new DbEx("invalid cnd or entity");
         }
         if (cnd.getEntityAlias() == null || cnd.getEntityAlias().length() == 0) {
@@ -442,7 +463,6 @@ public class RDBManager implements IDBase {
         long start = System.currentTimeMillis();
         try {
             StringBuffer part1 = new StringBuffer();
-            IDEntity entity = cnd.getEntity();
             if (cnd.getFields().size() == 0) {
                 throw new DbEx("invalid query field len");
             }
@@ -455,7 +475,7 @@ public class RDBManager implements IDBase {
             if (part1.length() == 0) {
                 throw new DbEx("invalid entity field len");
             }
-            TableObject table = ReflectUtil.getTableValue(entity);
+            TableObject table = ReflectUtil.getTableValue(cnd.getEntityClass());
             CaseObject whereCase = buildWhereCase(cnd);
             StringBuffer sqlpart = new StringBuffer();
             argpart = whereCase.getArgpart().toArray();
@@ -487,6 +507,9 @@ public class RDBManager implements IDBase {
             if (log.isDebugEnabled()) {
                 log.debug("sql msg: " + sqlstr);
             }
+            if (mapper == null) {
+                mapper = cnd.getEntityClass();
+            }
             List<E> list = null;
             if (IDEntity.class.isAssignableFrom(mapper)) {
                 list = template.query(sqlstr, argpart, new BeanPropertyRowMapper<E>(mapper));
@@ -507,15 +530,14 @@ public class RDBManager implements IDBase {
 
     @Override
     public long count(Cnd cnd) throws DbEx {
-        if (cnd == null || cnd.getEntity() == null) {
+        if (cnd == null || cnd.getEntityClass() == null) {
             throw new DbEx("invalid cnd or entity");
         }
         String sqlstr = null;
         Object[] argpart = null;
         long start = System.currentTimeMillis();
         try {
-            IDEntity entity = cnd.getEntity();
-            TableObject table = ReflectUtil.getTableValue(entity);
+            TableObject table = ReflectUtil.getTableValue(cnd.getEntityClass());
             CaseObject whereCase = buildWhereCase(cnd);
             StringBuffer sqlpart = new StringBuffer();
             sqlpart.append("select count(1) from ").append(table.getTableName());
@@ -537,7 +559,7 @@ public class RDBManager implements IDBase {
 
     @Override
     public long countComplex(Cnd cnd) throws DbEx {
-        if (cnd == null || cnd.getEntity() == null) {
+        if (cnd == null || cnd.getEntityClass() == null) {
             throw new DbEx("invalid cnd or entity");
         }
         if (cnd.getEntityAlias() == null || cnd.getEntityAlias().length() == 0) {
@@ -547,8 +569,7 @@ public class RDBManager implements IDBase {
         Object[] argpart = null;
         long start = System.currentTimeMillis();
         try {
-            IDEntity entity = cnd.getEntity();
-            TableObject table = ReflectUtil.getTableValue(entity);
+            TableObject table = ReflectUtil.getTableValue(cnd.getEntityClass());
             CaseObject whereCase = buildWhereCase(cnd);
             StringBuffer sqlpart = new StringBuffer();
             argpart = whereCase.getArgpart().toArray();

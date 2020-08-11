@@ -16,7 +16,7 @@ import java.util.*;
 
 public class SQL implements Cnd {
 
-    protected IDEntity entity; // 主表对象
+    protected Class entityClass; // 主表对象
     protected String entityAlias; // 主表对象别名
     protected List<Condition<?>> conditions = new ArrayList<>();
     protected List<String> fields = new ArrayList<>();
@@ -30,12 +30,12 @@ public class SQL implements Cnd {
 
     }
 
-    public SQL(IDEntity entity) {
-        this.entity = entity;
+    public SQL(Class entityClass) {
+        this.entityClass = entityClass;
     }
 
-    public SQL(IDEntity entity, String alias) {
-        this.entity = entity;
+    public SQL(Class entityClass, String alias) {
+        this.entityClass = entityClass;
         this.entityAlias = alias;
     }
 
@@ -254,11 +254,17 @@ public class SQL implements Cnd {
     }
 
     @Override
-    public Cnd offset(Long offset, Long limit) {
-        if (StringUtils.isEmpty(offset) && StringUtils.isEmpty(limit)) {
+    public Cnd offset(Long pageNo, Long pageSize) {
+        if (StringUtils.isEmpty(pageNo) && StringUtils.isEmpty(pageSize)) {
             return this;
         }
-        limit(offset, limit, false);
+        if (pageNo == null || pageNo < 0) {
+            pageNo = 0l;
+        }
+        if (pageSize == null || pageSize < 1 || pageSize > 500) {
+            pageSize = 50l;
+        }
+        pagination = new SimplePagination<>(pageNo, pageSize, false);
         pagination.setOffset(true);
         return this;
     }
@@ -364,8 +370,8 @@ public class SQL implements Cnd {
         return this;
     }
 
-    public IDEntity getEntity() {
-        return entity;
+    public Class getEntityClass() {
+        return entityClass;
     }
 
     public List<String> getGroupbys() {
@@ -396,7 +402,7 @@ public class SQL implements Cnd {
     public Cnd copy(Cnd cnd) {
         if (cnd instanceof SQL) {
             SQL oldSql = (SQL) cnd;
-            entity = oldSql.entity;
+            entityClass = oldSql.entityClass;
             entityAlias = oldSql.entityAlias;
             conditions.addAll(oldSql.conditions);
             fields.addAll(oldSql.fields);

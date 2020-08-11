@@ -40,19 +40,37 @@ public interface IDBase {
     public <E> E findByPK(Object pkval, Class<E> mapper) throws DbEx;
 
     // 查询数据
+    public <E> E findOne(Cnd cnd) throws DbEx;
+
+    // 查询数据
     public <E> E findOne(Cnd cnd, Class<E> mapper) throws DbEx;
+
+    // 查询列表数据
+    public <E> List<E> findList(Cnd cnd) throws DbEx;
 
     // 查询列表数据
     public <E> List<E> findList(Cnd cnd, Class<E> mapper) throws DbEx;
 
     // 分页查询列表数据
+    public <E> Pagination<E> findPage(Cnd cnd) throws DbEx;
+
+    // 分页查询列表数据
     public <E> Pagination<E> findPage(Cnd cnd, Class<E> mapper) throws DbEx;
+
+    // 复杂查询数据
+    public <E> E findOneComplex(Cnd cnd) throws DbEx;
 
     // 复杂查询数据
     public <E> E findOneComplex(Cnd cnd, Class<E> mapper) throws DbEx;
 
     // 复杂查询列表数据
+    public <E> List<E> findListComplex(Cnd cnd) throws DbEx;
+
+    // 复杂查询列表数据
     public <E> List<E> findListComplex(Cnd cnd, Class<E> mapper) throws DbEx;
+
+    // 复杂分页查询列表数据
+    public <E> Pagination<E> findPageComplex(Cnd cnd) throws DbEx;
 
     // 复杂分页查询列表数据
     public <E> Pagination<E> findPageComplex(Cnd cnd, Class<E> mapper) throws DbEx;
