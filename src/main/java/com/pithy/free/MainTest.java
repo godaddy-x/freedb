@@ -30,8 +30,15 @@ public class MainTest {
         return new JdbcTemplate(dataSource);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws DbEx {
+
+        // 扫描实体对象
         TableClassLoader.registry("com.pithy.free");
+
+        // 初始化DB操作对象
+        IDBase manager = new RDBManager(initJdbcTemplate(), new DBConfig(100));
+
+        // 实体示例
         Student student = new Student();
         student.setId(1l);
         student.setName1("张三1111");
@@ -44,31 +51,40 @@ public class MainTest {
         student1.setName1("李四3");
         student1.setSex(3);
         student1.setCreateAt(new Date());
-        IDBase manager = new RDBManager(initJdbcTemplate(), new DBConfig(100));
-        try {
-            manager.save(student, student1);
-            manager.update(student, student1);
-            manager.update(new SQL(Student.class)
-                    .eq("id", 1)
-                    .upset(new String[]{"id", "name", "createAt"}, 1, "王武111", new Date()));
-            manager.delete(student, student1);
-            manager.delete(new SQL(Student.class)
-                    .in("id", 1291716720588791809l, 2, 12, 13));
-            manager.count(new SQL(Student.class).eq("id", 1));
-            Student s = manager.findByPK(3, Student.class);
-            manager.findPage(new SQL(Student.class));
-            manager.findList(new SQL(Student.class).fields("name as name1")
-                            .or(new SQL().eq("id", 3), new SQL().in("id", 4, 21))
-                            .groupby("id").orderby("id", SortBy.A)
-                    , String.class);
-            manager.countComplex(new SQL(Student.class, "a")
-                    .fields("count(a.name) id")
-                    .eq("a.id", 1291716720588791810l).between("createAt", LocalDate.now(), LocalDate.now()));
-            manager.countComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
-            manager.findListComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
-            System.out.println("----");
-        } catch (DbEx dbEx) {
-            dbEx.printStackTrace();
-        }
+
+        // 保存实体
+        manager.save(student, student1);
+        // 更新实体
+        manager.update(student, student1);
+        // 根据条件更新指定字段
+        manager.update(new SQL(Student.class)
+                .eq("id", 1)
+                .upset(new String[]{"id", "name", "createAt"}, 1, "王武111", new Date()));
+        // 删除实体
+        manager.delete(student, student1);
+        // 根据条件删除
+        manager.delete(new SQL(Student.class)
+                .in("id", 1291716720588791809l, 2, 12, 13));
+        // 根据条件统计
+        manager.count(new SQL(Student.class).eq("id", 1));
+        // 根据主键获取实体
+        manager.findByPK(3, Student.class);
+        // 分页查询列表
+        manager.findPage(new SQL(Student.class));
+        // 根据条件查询列表
+        manager.findList(new SQL(Student.class).fields("name as name1")
+                        .or(new SQL().eq("id", 3), new SQL().in("id", 4, 21))
+                        .groupby("id").orderby("id", SortBy.A)
+                , String.class);
+        // 根据条件自定义统计
+        manager.countComplex(new SQL(Student.class, "a")
+                .fields("count(a.name) id")
+                .eq("a.id", 1291716720588791810l).between("createAt", LocalDate.now(), LocalDate.now()));
+        // 根据条件进行左连接统计
+        manager.countComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
+        // 根据条件进行左连接查询
+        manager.findListComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
+        // 根据条件进行左连接分页查询
+        manager.findPageComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
     }
 }
