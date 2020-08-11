@@ -110,6 +110,7 @@ public class StudentBase implements IDEntity {
 }
 
 @Table(name = "student", pk = "id")
+
 public class Student extends StudentBase {
 
     private Long id;
@@ -123,6 +124,7 @@ public class Student extends StudentBase {
 }
 
 @Table(name = "teacher", pk = "id")
+
 public class Teacher implements IDEntity {
 
     private Long id;
