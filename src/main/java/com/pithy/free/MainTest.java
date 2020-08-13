@@ -6,6 +6,7 @@ import com.pithy.free.crud.domain.DBConfig;
 import com.pithy.free.crud.ex.DbEx;
 import com.pithy.free.scan.TableClassLoader;
 import com.pithy.free.sqlcode.aconst.SortBy;
+import com.pithy.free.sqlcode.condition.Cnd;
 import com.pithy.free.sqlcode.condition.imp.SQL;
 import com.pithy.free.utils.ReflectUtil;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -84,7 +85,12 @@ public class MainTest {
         manager.countComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
         // 根据条件进行左连接查询
         manager.findListComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
-        // 根据条件进行左连接分页查询
-        manager.findPageComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
+        // 根据条件进行左连接分页查询(包含左连接子查询)
+        Cnd sql = new SQL(Student.class, "a")
+                .leftJoin(Teacher.class, "b", "a.id=b.studentId")
+                .leftJoin(new SQL(Student.class, "a")
+                        .leftJoin(Teacher.class, "b", "a.id=b.id").fields("a.id").eq("a.id", 3), "c", "a.id=c.id")
+                .fields("a.name as name1").eq("a.id", 1);
+        manager.findPageComplex(sql, Student.class);
     }
 }

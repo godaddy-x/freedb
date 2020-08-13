@@ -31,7 +31,7 @@ public class SQL implements Cnd {
     }
 
     public SQL(Class entityClass) {
-        this.entityClass = entityClass;
+        this(entityClass, null);
     }
 
     public SQL(Class entityClass, String alias) {
@@ -344,7 +344,7 @@ public class SQL implements Cnd {
     }
 
     @Override
-    public Cnd leftJoin(Object entity, String alias, String join) {
+    public Cnd leftJoin(Class entity, String alias, String join) {
         if (StringUtils.isEmpty(entity) || StringUtils.isEmpty(alias) || StringUtils.isEmpty(join)) {
             return this;
         }
@@ -353,7 +353,16 @@ public class SQL implements Cnd {
     }
 
     @Override
-    public Cnd rightJoin(Object entity, String alias, String join) {
+    public Cnd leftJoin(Cnd entity, String alias, String join) {
+        if (StringUtils.isEmpty(entity) || StringUtils.isEmpty(alias) || StringUtils.isEmpty(join)) {
+            return this;
+        }
+        joins.add(new Join(MODE.LEFT, entity, alias, join));
+        return this;
+    }
+
+    @Override
+    public Cnd rightJoin(Class entity, String alias, String join) {
         if (StringUtils.isEmpty(entity) || StringUtils.isEmpty(alias) || StringUtils.isEmpty(join)) {
             return this;
         }
@@ -362,7 +371,25 @@ public class SQL implements Cnd {
     }
 
     @Override
-    public Cnd innerJoin(Object entity, String alias, String join) {
+    public Cnd rightJoin(Cnd entity, String alias, String join) {
+        if (StringUtils.isEmpty(entity) || StringUtils.isEmpty(alias) || StringUtils.isEmpty(join)) {
+            return this;
+        }
+        joins.add(new Join(MODE.RIGHT, entity, alias, join));
+        return this;
+    }
+
+    @Override
+    public Cnd innerJoin(Class entity, String alias, String join) {
+        if (StringUtils.isEmpty(entity) || StringUtils.isEmpty(alias) || StringUtils.isEmpty(join)) {
+            return this;
+        }
+        joins.add(new Join(MODE.INNER, entity, alias, join));
+        return this;
+    }
+
+    @Override
+    public Cnd innerJoin(Cnd entity, String alias, String join) {
         if (StringUtils.isEmpty(entity) || StringUtils.isEmpty(alias) || StringUtils.isEmpty(join)) {
             return this;
         }

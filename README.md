@@ -203,6 +203,11 @@ public class MainTest {
         // 根据条件进行左连接查询
         manager.findListComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
         // 根据条件进行左连接分页查询
-        manager.findPageComplex(new SQL(Student.class, "a").leftJoin(Teacher.class, "b", "a.id=b.studentId").fields("a.name as name1"));
+        Cnd sql = new SQL(Student.class, "a")
+                        .leftJoin(Teacher.class, "b", "a.id=b.studentId")
+                        .leftJoin(new SQL(Student.class, "a")
+                                .leftJoin(Teacher.class, "b", "a.id=b.id").fields("a.id").eq("a.id", 3), "c", "a.id=c.id")
+                        .fields("a.name as name1").eq("a.id", 1);
+        manager.findPageComplex(sql, Student.class);
     }
 }

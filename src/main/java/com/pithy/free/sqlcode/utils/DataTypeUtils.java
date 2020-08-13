@@ -12,7 +12,7 @@ public class DataTypeUtils {
     final static DateTimeFormatter sdf2 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     final static DateTimeFormatter sdf3 = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    public static String[] objectToStringArr(Object[] argpart) {
+    public static String[] objectToStringArr(Object... argpart) {
         String[] param = new String[argpart.length];
         for (int i = 0; i < argpart.length; i++) {
             Object arg = argpart[i];

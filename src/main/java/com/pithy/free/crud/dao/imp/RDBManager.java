@@ -15,6 +15,7 @@ import com.pithy.free.sqlcode.domain.Condition;
 import com.pithy.free.sqlcode.domain.Join;
 import com.pithy.free.sqlcode.domain.OrderBy;
 import com.pithy.free.sqlcode.utils.DataTypeUtils;
+import com.pithy.free.sqlcode.utils.StringUtils;
 import com.pithy.free.utils.IdWorker;
 import com.pithy.free.utils.ReflectUtil;
 import org.slf4j.Logger;
@@ -27,10 +28,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * mysql数据库 - CRUD封装实现类
@@ -462,63 +460,22 @@ public class RDBManager implements IDBase {
         if (cnd == null || cnd.getEntityClass() == null) {
             throw new DbEx("invalid cnd or entity");
         }
-        if (cnd.getEntityAlias() == null || cnd.getEntityAlias().length() == 0) {
+        if (StringUtils.isEmpty(cnd.getEntityAlias())) {
             throw new DbEx("invalid entity alias");
         }
-        String sqlstr = null;
-        Object[] argpart = null;
+        SQLObject<E> sqlObject = null;
         long start = System.currentTimeMillis();
         try {
-            StringBuffer part1 = new StringBuffer();
-            if (cnd.getFields().size() == 0) {
-                throw new DbEx("invalid query field len");
-            }
-            for (String field : cnd.getFields()) {
-                if (field == null || field.trim().length() == 0) {
-                    continue;
-                }
-                part1.append(field.trim()).append(",");
-            }
-            if (part1.length() == 0) {
-                throw new DbEx("invalid entity field len");
-            }
-            TableObject table = ReflectUtil.getTableValue(cnd.getEntityClass());
-            CaseObject whereCase = buildWhereCase(cnd);
-            StringBuffer sqlpart = new StringBuffer();
-            argpart = whereCase.getArgpart().toArray();
-            sqlpart.append("select ").append(part1.substring(0, part1.length() - 1)).append(" from ").append(table.getTableName()).append(" ").append(cnd.getEntityAlias()).append(" ");
-            CaseObject joinCase = buildJoinCase(cnd);
-            if (joinCase.getSqlpart().length() > 0) {
-                sqlpart.append(joinCase.getSqlpart());
-            }
-            if (whereCase.getSqlpart().length() > 0) {
-                sqlpart.append("where").append(whereCase.getSqlpart().substring(0, whereCase.getSqlpart().length() - 3));
-            }
-            CaseObject groupbyCase = buildGroupbyCase(cnd);
-            if (groupbyCase.getSqlpart().length() > 0) {
-                sqlpart.append(groupbyCase.getSqlpart());
-            }
-            CaseObject sortbyCase = buildSortbyCase(cnd);
-            if (sortbyCase.getSqlpart().length() > 0) {
-                sqlpart.append(sortbyCase.getSqlpart());
-            }
-            Pagination<E> pagination = null;
-            sqlstr = sqlpart.toString();
-            CaseObject pageObj = buildPagination(cnd, sqlstr, argpart);
-            if (pageObj != null) { // normal query list
-                sqlstr = pageObj.getSqlpart();
-                pagination = pageObj.getPagination();
-            } else {
-                pagination = new SimplePagination<>();
-            }
+            sqlObject = buildSQLObject(cnd);
             if (mapper == null) {
                 mapper = cnd.getEntityClass();
             }
+            Pagination<E> pagination = sqlObject.getPagination();
             List<E> list = null;
             if (IDEntity.class.isAssignableFrom(mapper)) {
-                list = template.query(sqlstr, argpart, new BeanPropertyRowMapper<E>(mapper));
+                list = template.query(sqlObject.getSqlstr(), sqlObject.getSqlarg(), new BeanPropertyRowMapper<>(mapper));
             } else {
-                list = template.queryForList(sqlstr, mapper, argpart);
+                list = template.queryForList(sqlObject.getSqlstr(), mapper, sqlObject.getSqlarg());
             }
             if (list == null) {
                 list = new ArrayList<>();
@@ -528,8 +485,71 @@ public class RDBManager implements IDBase {
         } catch (Exception e) {
             throw new DbEx(e);
         } finally {
-            logSqlHandle(start, sqlstr, argpart);
+            if (sqlObject == null) {
+                sqlObject = new SQLObject<>();
+            }
+            logSqlHandle(start, sqlObject.getSqlstr(), sqlObject.getSqlarg());
         }
+    }
+
+    private <E> SQLObject buildSQLObject(Cnd cnd) throws DbEx {
+        String sqlstr = null;
+        Object[] argpart = null;
+        StringBuffer part1 = new StringBuffer();
+        if (cnd.getFields().size() == 0) {
+            throw new DbEx("invalid query field len");
+        }
+        for (String field : cnd.getFields()) {
+            if (StringUtils.isEmpty(field)) {
+                continue;
+            }
+            String key = field.trim();
+            if (StringUtils.isEmpty(key)) {
+                continue;
+            }
+            part1.append(key).append(",");
+        }
+        if (part1.length() == 0) {
+            throw new DbEx("invalid entity field len");
+        }
+        TableObject table = ReflectUtil.getTableValue(cnd.getEntityClass());
+        CaseObject whereCase = buildWhereCase(cnd);
+        StringBuffer sqlpart = new StringBuffer();
+//        argpart = whereCase.getArgpart().toArray();
+        List<Object> sqlarg = new ArrayList<>();
+        sqlpart.append("select ").append(part1.substring(0, part1.length() - 1)).append(" from ").append(table.getTableName()).append(" ").append(cnd.getEntityAlias()).append(" ");
+        CaseObject joinCase = buildJoinCase(cnd);
+        if (joinCase.getSqlpart().length() > 0) {
+            sqlpart.append(joinCase.getSqlpart());
+        }
+        if (joinCase.getArgpart().size() > 0) {
+            sqlarg.add(Arrays.asList(joinCase.getArgpart()));
+        }
+        if (whereCase.getSqlpart().length() > 0) {
+            sqlpart.append("where").append(whereCase.getSqlpart().substring(0, whereCase.getSqlpart().length() - 3));
+        }
+        if (whereCase.getArgpart().size() > 0) {
+            sqlarg.add(Arrays.asList(whereCase.getArgpart()));
+        }
+        CaseObject groupbyCase = buildGroupbyCase(cnd);
+        if (groupbyCase.getSqlpart().length() > 0) {
+            sqlpart.append(groupbyCase.getSqlpart());
+        }
+        CaseObject sortbyCase = buildSortbyCase(cnd);
+        if (sortbyCase.getSqlpart().length() > 0) {
+            sqlpart.append(sortbyCase.getSqlpart());
+        }
+        Pagination<E> pagination = null;
+        sqlstr = sqlpart.toString();
+        argpart = sqlarg.toArray();
+        CaseObject pageObj = buildPagination(cnd, sqlstr, argpart);
+        if (pageObj != null) {
+            sqlstr = pageObj.getSqlpart();
+            pagination = pageObj.getPagination();
+        } else {
+            pagination = new SimplePagination<>();
+        }
+        return new SQLObject(sqlstr, argpart, pagination);
     }
 
     @Override
@@ -764,32 +784,34 @@ public class RDBManager implements IDBase {
 
     private CaseObject buildJoinCase(Cnd cnd) throws DbEx {
         StringBuffer sqlpart = new StringBuffer();
+        List<Object> sqlarg = new ArrayList<>();
         if (cnd.getJoins().size() == 0) {
-            return new CaseObject(sqlpart.toString(), null);
+            return new CaseObject(sqlpart.toString(), sqlarg);
         }
         for (Join join : cnd.getJoins()) {
-            TableObject table = null;
-            try {
-                table = ReflectUtil.getTableValue(join.getEntity());
-            } catch (Exception e) {
-                throw new DbEx(e);
-            }
-            String alias = join.getAlias().trim();
-            String on = join.getJoin().trim();
-            if (alias.length() == 0 || on.length() == 0) {
+            String alias = join.getAlias() == null ? "" : join.getAlias().trim();
+            String on = join.getJoin() == null ? "" : join.getJoin().trim();
+            if (StringUtils.isEmpty(alias) || StringUtils.isEmpty(on)) {
                 throw new DbEx("invalid join alias/on");
             }
-            if (MODE.LEFT.equals(join.getMode())) {
-                sqlpart.append("left join ").append(table.getTableName()).append(" ").append(alias).append(" on ").append(on).append(" ");
-            } else if (MODE.RIGHT.equals(join.getMode())) {
-                sqlpart.append("right join ").append(table.getTableName()).append(" ").append(alias).append(" on ").append(on).append(" ");
-            } else if (MODE.INNER.equals(join.getMode())) {
-                sqlpart.append("inner join ").append(table.getTableName()).append(" ").append(alias).append(" on ").append(on).append(" ");
+            if (join.getEntity() instanceof Cnd) {
+                SQLObject sqlObject = buildSQLObject((Cnd) join.getEntity());
+                sqlpart.append("left join (").append(sqlObject.getSqlstr()).append(") ").append(alias).append(" on ").append(on).append(" ");
+                sqlarg.add(Arrays.asList(sqlObject.getSqlarg()));
             } else {
-                throw new DbEx("invalid join mode");
+                TableObject table = ReflectUtil.getTableValue(join.getEntity());
+                if (MODE.LEFT.equals(join.getMode())) {
+                    sqlpart.append("left join ").append(table.getTableName()).append(" ").append(alias).append(" on ").append(on).append(" ");
+                } else if (MODE.RIGHT.equals(join.getMode())) {
+                    sqlpart.append("right join ").append(table.getTableName()).append(" ").append(alias).append(" on ").append(on).append(" ");
+                } else if (MODE.INNER.equals(join.getMode())) {
+                    sqlpart.append("inner join ").append(table.getTableName()).append(" ").append(alias).append(" on ").append(on).append(" ");
+                } else {
+                    throw new DbEx("invalid join mode");
+                }
             }
         }
-        return new CaseObject(sqlpart.toString(), null);
+        return new CaseObject(sqlpart.toString(), sqlarg);
     }
 
     private IDEntity[] listToArr(List entities) throws DbEx {

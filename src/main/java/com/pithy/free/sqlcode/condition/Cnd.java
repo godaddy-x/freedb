@@ -93,13 +93,22 @@ public interface Cnd {
     public Cnd upset(String[] keys, Object... values);
 
     // 左连接表
-    public Cnd leftJoin(Object entity, String alias, String join);
+    public Cnd leftJoin(Class entity, String alias, String join);
+
+    // 左连接表
+    public Cnd leftJoin(Cnd entity, String alias, String join);
 
     // 右连接表
-    public Cnd rightJoin(Object entity, String alias, String join);
+    public Cnd rightJoin(Class entity, String alias, String join);
+
+    // 右连接表
+    public Cnd rightJoin(Cnd entity, String alias, String join);
 
     // 内连接表
-    public Cnd innerJoin(Object entity, String alias, String join);
+    public Cnd innerJoin(Class entity, String alias, String join);
+
+    // 内连接表
+    public Cnd innerJoin(Cnd entity, String alias, String join);
 
     // 复制条件
     public Cnd copy(Cnd cnd);
