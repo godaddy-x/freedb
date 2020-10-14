@@ -157,7 +157,7 @@ public class IdWorker {
         return System.currentTimeMillis();
     }
 
-    private static final IdWorker worker = new IdWorker(0,0);
+    private static final IdWorker worker = new IdWorker(0, 0);
 
     public static String getSID() {
         return String.valueOf(worker.nextId());

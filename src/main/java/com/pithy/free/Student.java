@@ -1,12 +1,13 @@
 package com.pithy.free;
 
 import com.pithy.free.anno.Column;
+import com.pithy.free.anno.IdGen;
 import com.pithy.free.anno.Table;
 import com.pithy.free.crud.domain.IDEntity;
 
 import java.util.Date;
 
-@Table(name = "student", pk = "id")
+@Table(name = "student", type = IdGen.SNOW)
 public class Student extends StudentBase implements IDEntity {
 
     private Long id;

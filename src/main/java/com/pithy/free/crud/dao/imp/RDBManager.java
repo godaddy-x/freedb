@@ -1,5 +1,6 @@
 package com.pithy.free.crud.dao.imp;
 
+import com.pithy.free.anno.IdGen;
 import com.pithy.free.crud.aconst.MODE;
 import com.pithy.free.crud.dao.IDBase;
 import com.pithy.free.crud.domain.*;
@@ -96,16 +97,13 @@ public class RDBManager implements IDBase {
                 for (ColumnObject column : fields) {
                     Object columnValue = ReflectUtil.getFieldValue(entity, column.getClassType(), column.getMdName());
                     if (column.isPK()) { // PK字段
-                        if (!dbConfig.isSnowflakeID()) { // 自动填充ID字段跳过
-                            continue;
-                        }
                         if (columnValue == null) {
-                            if (Long.class == column.getFieldType()) {
-                                columnValue = IdWorker.getLID();
-                            } else if (String.class == column.getFieldType()) {
-                                columnValue = IdWorker.getSID();
-                            } else {
-                                throw new DbEx("invalid entity id type");
+                            if (table.getIdGen().equals(IdGen.SNOW)) { // 雪花ID填充
+                                if (table.getPkType() == 0) {
+                                    columnValue = IdWorker.getLID();
+                                } else {
+                                    columnValue = IdWorker.getSID();
+                                }
                             }
                         }
                     }

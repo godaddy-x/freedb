@@ -56,6 +56,7 @@ public class TableClassLoader {
                 // 实体/数据库对应参数
                 TableObject tableObject = new TableObject();
                 tableObject.setTableName(tableName);
+                tableObject.setIdGen(ann.type());
                 tableObject.setPkName(pkName);
                 tableObject.setModelClass(obj.getClass());
                 tableObject.setModelClassName(obj.getClass().getName());
@@ -79,6 +80,13 @@ public class TableClassLoader {
                     columnObject.setIgnore(column == null ? false : column.ignore());
                     columnObject.setFieldType(field.getType());
                     if (pkName.equals(columnObject.getDbName())) {
+                        if (columnObject.getFieldType() == Long.class || columnObject.getFieldType() == long.class) {
+                            tableObject.setPkType(0);
+                        } else if (columnObject.getFieldType() == String.class) {
+                            tableObject.setPkType(1);
+                        } else {
+                            throw new Exception("pk filed class type only support Long or String");
+                        }
                         columnObject.setPK(true);
                         tableObject.setPkColumn(columnObject);
                     }
