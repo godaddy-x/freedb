@@ -13,6 +13,10 @@ public class BizErrorEx extends Exception {
         this(BIZ_FAIL, tips, "", null);
     }
 
+    public BizErrorEx(Throwable throwable) {
+        this(BIZ_FAIL, "fail", "", throwable);
+    }
+
     public BizErrorEx(String tips, Throwable throwable) {
         this(BIZ_FAIL, tips, "", throwable);
     }

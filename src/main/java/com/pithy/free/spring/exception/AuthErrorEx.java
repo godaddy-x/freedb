@@ -15,6 +15,10 @@ public class AuthErrorEx extends IOException {
         this(AUTH_FAIL, tips, "", null);
     }
 
+    public AuthErrorEx(Throwable throwable) {
+        this(AUTH_FAIL, "fail", "", throwable);
+    }
+
     public AuthErrorEx(String tips, Throwable throwable) {
         this(AUTH_FAIL, tips, "", throwable);
     }

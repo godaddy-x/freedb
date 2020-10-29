@@ -28,7 +28,7 @@ public class WebHandlerInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        checkAuthToken(request);
+        doSafeAuthToken(request);
         return true;
     }
 
@@ -55,7 +55,7 @@ public class WebHandlerInterceptor implements HandlerInterceptor {
         }
     }
 
-    private Subject checkAuthToken(HttpServletRequest request) throws AuthErrorEx {
+    private Subject doSafeAuthToken(HttpServletRequest request) throws AuthErrorEx {
         if (!"POST".equals(request.getMethod().toUpperCase()) || !request.getHeader(HttpHeaders.CONTENT_TYPE).equalsIgnoreCase(MediaType.APPLICATION_JSON_VALUE)) {
             throw new AuthErrorEx("只允许post方式application/json请求");
         }
@@ -112,7 +112,11 @@ public class WebHandlerInterceptor implements HandlerInterceptor {
         if (!sign.equals(checkSign)) {
             throw new AuthErrorEx("数据签名校验失败");
         }
-        return worker.validToken(token, "");
+        Subject subject = worker.validToken(token, "");
+        if (subject != null) {
+            request.setAttribute(SubjectHolder.CTX_SESSION_SUBJECT, subject);
+        }
+        return subject;
     }
 
 }
