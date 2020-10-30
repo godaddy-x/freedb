@@ -1,4 +1,4 @@
-package com.pithy.free.utils;
+package com.pithy.free.spring.utils;
 
 import java.util.HashMap;
 import java.util.Map;

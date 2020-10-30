@@ -13,16 +13,16 @@ public class WebExceptionHandle {
     private static final Logger log = LoggerFactory.getLogger(WebExceptionHandle.class);
 
     @ExceptionHandler(Exception.class)
-    public ResultObject handle(Exception e) {
+    public UnifyResponse handle(Exception e) {
         if (e instanceof BizErrorEx) {
             BizErrorEx bx = (BizErrorEx) e;
-            return new ResultObject(bx.getCode(), bx.getTips(), null, bx.getDesc());
+            return new UnifyResponse(bx.getCode(), bx.getTips(), null, bx.getDesc());
         } else if (e instanceof AuthErrorEx) {
             AuthErrorEx bx = (AuthErrorEx) e;
-            return new ResultObject(bx.getCode(), bx.getTips(), null, bx.getDesc());
+            return new UnifyResponse(bx.getCode(), bx.getTips(), null, bx.getDesc());
         } else {
             log.error("系统发生异常", e);
-            return new ResultObject(BizErrorEx.SYS_FAIL, "业务处理发生异常,请稍后再尝试");
+            return new UnifyResponse(BizErrorEx.SYS_FAIL, "业务处理发生异常,请稍后再尝试");
         }
     }
 }

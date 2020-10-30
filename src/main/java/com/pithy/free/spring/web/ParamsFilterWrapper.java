@@ -10,11 +10,12 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
-public class ParameterRequestWrapper extends HttpServletRequestWrapper {
+// 重写request请求
+public class ParamsFilterWrapper extends HttpServletRequestWrapper {
 
     private final byte[] body;
 
-    public ParameterRequestWrapper(HttpServletRequest request) {
+    public ParamsFilterWrapper(HttpServletRequest request) {
         super(request);
         String bodyString = getBodyString(request);
         body = bodyString.getBytes(StandardCharsets.UTF_8);

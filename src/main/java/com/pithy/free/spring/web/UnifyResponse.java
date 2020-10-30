@@ -2,23 +2,23 @@ package com.pithy.free.spring.web;
 
 import com.pithy.free.utils.IdWorker;
 
-public class ResultObject {
+public class UnifyResponse {
 
     public static final String SUCC = "000000";
 
-    public ResultObject() {
+    public UnifyResponse() {
         this(SUCC, "success", null, "");
     }
 
-    public ResultObject(Object data) {
+    public UnifyResponse(Object data) {
         this(SUCC, "success", data, "");
     }
 
-    public ResultObject(String code, String tips) {
+    public UnifyResponse(String code, String tips) {
         this(code, tips, null, "");
     }
 
-    public ResultObject(String code, String tips, Object data, String desc) {
+    public UnifyResponse(String code, String tips, Object data, String desc) {
         this.code = code;
         this.tips = tips;
         this.data = data;

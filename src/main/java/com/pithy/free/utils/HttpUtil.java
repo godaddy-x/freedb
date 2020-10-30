@@ -10,8 +10,7 @@ import java.nio.charset.StandardCharsets;
 
 public class HttpUtil {
 
-    public static String doPost(String httpUrl, String token, String param) {
-
+    public static String doPost(String httpUrl, String jsonstr) {
         HttpURLConnection connection = null;
         InputStream is = null;
         OutputStream os = null;
@@ -27,7 +26,6 @@ public class HttpUtil {
             connection.setConnectTimeout(15000);
             // 设置读取主机服务器返回数据超时时间：60000毫秒
             connection.setReadTimeout(60000);
-
             // 默认值为：false，当向远程服务器传送数据/写数据时，需要设置为true
             connection.setDoOutput(true);
             // 默认值为：true，当前向远程服务读取数据时，设置为true，该参数可有可无
@@ -36,20 +34,15 @@ public class HttpUtil {
             connection.setRequestProperty("Content-Type", "application/json");
             // 设置鉴权信息：Authorization: Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0
             // connection.setRequestProperty("Authorization", "Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0");
-            if (token != null) {
-                connection.setRequestProperty("token", token);
-            }
             // 通过连接对象获取一个输出流
             os = connection.getOutputStream();
             // 通过输出流对象将参数写出去/传输出去,它是通过字节数组写出的
-            os.write(param.getBytes(StandardCharsets.UTF_8));
+            os.write(jsonstr.getBytes(StandardCharsets.UTF_8));
             // 通过连接对象获取一个输入流，向远程读取
             if (connection.getResponseCode() == 200) {
-
                 is = connection.getInputStream();
                 // 对输入流对象进行包装:charset根据工作项目组的要求来设置
                 br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-
                 StringBuffer sbf = new StringBuffer();
                 String temp = null;
                 // 循环遍历一行一行读取数据
@@ -85,7 +78,9 @@ public class HttpUtil {
                 }
             }
             // 断开与远程地址url的连接
-            connection.disconnect();
+            if (null != connection) {
+                connection.disconnect();
+            }
         }
         return result;
     }

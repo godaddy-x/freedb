@@ -1,6 +1,6 @@
 package com.pithy.free.spring.web;
 
-public class RequestObject {
+public class UnifyRequest {
 
     private String token; // 授权令牌
     private String data; // 请求的JSON数据(base64)

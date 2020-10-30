@@ -1,7 +1,7 @@
 package com.pithy.free.spring.session;
 
 import com.pithy.free.spring.exception.AuthErrorEx;
-import com.pithy.free.spring.web.JsonUtil;
+import com.pithy.free.spring.utils.JsonUtil;
 import com.pithy.free.sqlcode.utils.StringUtils;
 import com.pithy.free.utils.AES;
 import com.pithy.free.utils.HMAC256;
@@ -70,7 +70,7 @@ public class AuthWorker {
         if (token_bs == null || token_bs.length == 0) {
             outError("无效的令牌数据");
         }
-        Subject subject = JsonUtil.parseObject(new String(token_bs), Subject.class);
+        Subject subject = JsonUtil.parseObject(new String(token_bs, StandardCharsets.UTF_8), Subject.class);
         if (subject == null) {
             outError("无法获得令牌数据");
         }

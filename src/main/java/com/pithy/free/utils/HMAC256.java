@@ -1,6 +1,6 @@
 package com.pithy.free.utils;
 
-import com.pithy.free.spring.web.JsonUtil;
+import com.pithy.free.spring.utils.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +18,7 @@ public class HMAC256 {
             SecretKeySpec secret_key = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
             sha256_HMAC.init(secret_key);
             byte[] array = sha256_HMAC.doFinal(data.getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder();
+            StringBuffer sb = new StringBuffer();
             for (byte item : array) {
                 sb.append(Integer.toHexString((item & 0xFF) | 0x100).substring(1, 3));
             }

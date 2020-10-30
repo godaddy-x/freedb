@@ -13,14 +13,14 @@ public class ParamsFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
                          FilterChain chain) throws IOException, ServletException {
-        ServletRequest requestWrapper = null;
+        ServletRequest wrapper = null;
         if (request instanceof HttpServletRequest) {
-            requestWrapper = new ParameterRequestWrapper((HttpServletRequest) request);
+            wrapper = new ParamsFilterWrapper((HttpServletRequest) request);
         }
-        if (requestWrapper == null) {
+        if (wrapper == null) {
             chain.doFilter(request, response);
         } else {
-            chain.doFilter(requestWrapper, response);
+            chain.doFilter(wrapper, response);
         }
     }
 

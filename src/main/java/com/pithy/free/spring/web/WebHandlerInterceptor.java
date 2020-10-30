@@ -7,7 +7,10 @@ import com.pithy.free.spring.exception.BizErrorEx;
 import com.pithy.free.spring.session.AuthWorker;
 import com.pithy.free.spring.session.Subject;
 import com.pithy.free.spring.session.SubjectHolder;
+import com.pithy.free.spring.utils.JsonUtil;
 import com.pithy.free.utils.HMAC256;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -23,7 +26,9 @@ import javax.servlet.http.HttpServletResponse;
 @Component
 public class WebHandlerInterceptor implements HandlerInterceptor {
 
-    @Autowired
+    private static final Logger log = LoggerFactory.getLogger(WebHandlerInterceptor.class);
+
+    @Autowired(required = false)
     private AuthWorker authWorker;
 
     @Override
@@ -56,11 +61,15 @@ public class WebHandlerInterceptor implements HandlerInterceptor {
     }
 
     private Subject doSafeAuthToken(HttpServletRequest request) throws AuthErrorEx {
+        if (authWorker == null) {
+            log.warn("授权工具[AuthWorker]实例尚未初始化");
+            return null;
+        }
         if (!"POST".equals(request.getMethod().toUpperCase()) || !request.getHeader(HttpHeaders.CONTENT_TYPE).equalsIgnoreCase(MediaType.APPLICATION_JSON_VALUE)) {
             throw new AuthErrorEx("只允许post方式application/json请求");
         }
-        String body = new ParameterRequestWrapper(request).getBodyString(request);
-        RequestObject reqst = JsonUtil.parseObject(body, RequestObject.class);
+        String body = new ParamsFilterWrapper(request).getBodyString(request);
+        UnifyRequest reqst = JsonUtil.parseObject(body, UnifyRequest.class);
         if (reqst == null) {
             throw new AuthErrorEx("请求数据不能为空");
         }

@@ -7,14 +7,14 @@ import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 // 统一处理ResponseBody数据格式
-public class ResultWarpReturnValueHandler implements HandlerMethodReturnValueHandler {
+public class UnifyReturnValueHandler implements HandlerMethodReturnValueHandler {
 
     private final HandlerMethodReturnValueHandler delegate;
 
     /**
      * 委托
      */
-    public ResultWarpReturnValueHandler(HandlerMethodReturnValueHandler delegate) {
+    public UnifyReturnValueHandler(HandlerMethodReturnValueHandler delegate) {
         this.delegate = delegate;
     }
 
@@ -35,6 +35,6 @@ public class ResultWarpReturnValueHandler implements HandlerMethodReturnValueHan
     @Override
     public void handleReturnValue(@Nullable Object returnValue, MethodParameter returnType, ModelAndViewContainer mavContainer, NativeWebRequest webRequest) throws Exception {
         // 委托SpringMVC默认的RequestResponseBodyMethodProcessor进行序列化
-        delegate.handleReturnValue(returnValue instanceof ResultObject ? returnValue : new ResultObject(returnValue), returnType, mavContainer, webRequest);
+        delegate.handleReturnValue(returnValue instanceof UnifyResponse ? returnValue : new UnifyResponse(returnValue), returnType, mavContainer, webRequest);
     }
 }
