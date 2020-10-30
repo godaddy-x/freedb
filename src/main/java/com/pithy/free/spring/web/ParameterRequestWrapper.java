@@ -1,7 +1,6 @@
 package com.pithy.free.spring.web;
 
 import com.pithy.free.spring.session.SubjectHolder;
-import com.pithy.free.sqlcode.utils.StringUtils;
 
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
@@ -9,6 +8,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 public class ParameterRequestWrapper extends HttpServletRequestWrapper {
 
@@ -17,7 +17,7 @@ public class ParameterRequestWrapper extends HttpServletRequestWrapper {
     public ParameterRequestWrapper(HttpServletRequest request) {
         super(request);
         String bodyString = getBodyString(request);
-        body = bodyString.getBytes();
+        body = bodyString.getBytes(StandardCharsets.UTF_8);
     }
 
     // 获取请求Body

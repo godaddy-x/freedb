@@ -1,13 +1,14 @@
 package com.pithy.free.spring.session;
 
 import com.pithy.free.spring.exception.AuthErrorEx;
-import com.pithy.free.spring.exception.BizErrorEx;
 import com.pithy.free.spring.web.JsonUtil;
 import com.pithy.free.sqlcode.utils.StringUtils;
+import com.pithy.free.utils.AES;
 import com.pithy.free.utils.HMAC256;
 import com.pithy.free.utils.IdWorker;
 import org.springframework.util.Base64Utils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 public class AuthWorker {
@@ -44,7 +45,8 @@ public class AuthWorker {
         if (StringUtils.isEmpty(token)) {
             outError("生成授权令牌失败");
         }
-        String token_b64 = Base64Utils.encodeToString(token.getBytes());
+        String token_b64 = null;
+        token_b64 = Base64Utils.encodeToString(token.getBytes(StandardCharsets.UTF_8));
         String token_hmac = HMAC256.create(token_b64, config.getSecret() + secret);
         return token_b64 + "." + token_hmac;
     }
@@ -55,7 +57,7 @@ public class AuthWorker {
         if (StringUtils.isEmpty(token)) {
             outError("授权令牌不能为空");
         }
-        String[] part = token.split("\\.");
+        String[] part = StringUtils.split(token, "\\.");
         if (part == null || part.length != 2) {
             outError("授权令牌格式无效");
         }
@@ -64,7 +66,7 @@ public class AuthWorker {
         if (!token_hmac.equals(part[1])) {
             outError("授权令牌校验失败");
         }
-        byte[] token_bs = Base64Utils.decode(token_b64.getBytes());
+        byte[] token_bs = Base64Utils.decode(token_b64.getBytes(StandardCharsets.UTF_8));
         if (token_bs == null || token_bs.length == 0) {
             outError("无效的令牌数据");
         }
@@ -82,6 +84,26 @@ public class AuthWorker {
     public String createSecret(String data) {
         String sha256 = HMAC256.create(data, config.getSecret());
         return sha256.substring(3, 43);
+    }
+
+    // AES加密用户密钥
+    public String encryptSecret(String data, String secret) {
+        String[] split = StringUtils.split(data, "\\.");
+        if (split.length != 2) {
+            return null;
+        }
+        String key = HMAC256.create(split[0], split[1]);
+        return AES.encrypt(secret, key.substring(4, 44));
+    }
+
+    // AES解密用户密钥
+    public String decryptSecret(String data, String secret) {
+        String[] split = StringUtils.split(data, "\\.");
+        if (split.length != 2) {
+            return null;
+        }
+        String key = HMAC256.create(split[0], split[1]);
+        return AES.decrypt(secret, key.substring(4, 44));
     }
 
     private void checkAuthConfig() throws AuthErrorEx {
