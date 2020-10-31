@@ -17,13 +17,17 @@ public class WebHandlerInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        subjectHolder.authenticate(request, response);
+        if (subjectHolder != null) {
+            subjectHolder.authenticate(request, response);
+        }
         return true;
     }
 
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
-        subjectHolder.rebuild404And500Code(response);
+        if (subjectHolder != null) {
+            subjectHolder.rebuild404And500Code(response);
+        }
     }
 
     @Override
