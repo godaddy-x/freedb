@@ -25,6 +25,9 @@ public class JsonUtil {
 
     public static String toJSONString(Object object) {
         try {
+            if (object == null) {
+                return null;
+            }
             return objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {
             log.error("JSON序列化失败", e);
@@ -34,6 +37,9 @@ public class JsonUtil {
 
     public static <T> T parseObject(String json, Class<T> object) {
         try {
+            if (json == null || json.length() == 0) {
+                return null;
+            }
             return objectMapper.readValue(json, object);
         } catch (JsonProcessingException e) {
             log.error("JSON反序列化失败", e);

@@ -39,6 +39,7 @@ public class HttpUtil {
             // 通过输出流对象将参数写出去/传输出去,它是通过字节数组写出的
             os.write(jsonstr.getBytes(StandardCharsets.UTF_8));
             // 通过连接对象获取一个输入流，向远程读取
+            System.out.println("---------"+connection.getResponseCode()+"----"+connection.getResponseMessage());
             if (connection.getResponseCode() == 200) {
                 is = connection.getInputStream();
                 // 对输入流对象进行包装:charset根据工作项目组的要求来设置
