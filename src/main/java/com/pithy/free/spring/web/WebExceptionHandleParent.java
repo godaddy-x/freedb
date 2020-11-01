@@ -7,10 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice
-public class WebExceptionHandle {
+public class WebExceptionHandleParent {
 
-    private static final Logger log = LoggerFactory.getLogger(WebExceptionHandle.class);
+    private static final Logger log = LoggerFactory.getLogger(WebExceptionHandleParent.class);
 
     @ExceptionHandler(Exception.class)
     public UnifyResponse handle(Exception e) {

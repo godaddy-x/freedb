@@ -10,10 +10,8 @@ import com.pithy.free.spring.web.UnifyRequest;
 import com.pithy.free.utils.HMAC256;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
 import org.springframework.util.Base64Utils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -22,12 +20,10 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@Component
 public class SubjectHolder {
 
     private static final Logger log = LoggerFactory.getLogger(SubjectHolder.class);
 
-    @Autowired(required = false)
     private AuthWorker authWorker;
 
     public SubjectHolder() {
@@ -57,12 +53,19 @@ public class SubjectHolder {
         return null;
     }
 
-    public Subject authenticate(HttpServletRequest request, HttpServletResponse response) throws AuthErrorEx {
-        try {
-            rebuild404And500Code(response);
-        } catch (BizErrorEx ex) {
-            throw new AuthErrorEx(ex.getCode(), ex.getTips(), ex);
+    public static void rebuild404And500Code(HttpServletResponse response) throws BizErrorEx {
+        int status = response.getStatus();
+        if (status == 404) {
+            response.setStatus(200);
+            throw new BizErrorEx("无效的请求方法");
         }
+        if (status == 500) {
+            response.setStatus(200);
+            throw new BizErrorEx("业务方法处理异常");
+        }
+    }
+
+    public Subject authenticate(HttpServletRequest request, HttpServletResponse response) throws AuthErrorEx {
         if (authWorker == null) {
             log.warn("授权工具[AuthWorker]实例尚未初始化");
             return null;
@@ -128,18 +131,6 @@ public class SubjectHolder {
             request.setAttribute(SubjectHolder.CTX_SESSION_SUBJECT, subject);
         }
         return subject;
-    }
-
-    public void rebuild404And500Code(HttpServletResponse response) throws BizErrorEx {
-        int status = response.getStatus();
-        if (status == 404) {
-            response.setStatus(200);
-            throw new BizErrorEx("无效的请求方法");
-        }
-        if (status == 500) {
-            response.setStatus(200);
-            throw new BizErrorEx("业务方法处理异常");
-        }
     }
 
 }

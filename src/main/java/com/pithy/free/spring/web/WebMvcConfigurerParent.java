@@ -2,8 +2,6 @@ package com.pithy.free.spring.web;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -14,28 +12,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 // 替换默认的RequestResponseBodyMethodProcessor
-@Configuration
-@EnableCaching
-public class WebMvcConfigurerDevelop implements WebMvcConfigurer, InitializingBean {
+public class WebMvcConfigurerParent implements WebMvcConfigurer, InitializingBean {
 
     @Autowired(required = false)
-    private RequestMappingHandlerAdapter mappingHandlerAdapter;
+    private RequestMappingHandlerAdapter handlerAdapter;
 
     @Autowired(required = false)
-    private WebHandlerInterceptor handlerInterceptor;
+    private InterceptorFactory interceptorFactory;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 多个拦截器组成一个拦截器链
-        // addPathPatterns 用于添加拦截规则
-        // excludePathPatterns 用户排除拦截
-        registry.addInterceptor(handlerInterceptor).addPathPatterns("/**");
+        // 增加自定义拦截器列表
+        if (interceptorFactory == null) {
+            return;
+        }
+        InterceptorBean[] beans = interceptorFactory.getInterceptorBeans();
+        if (beans == null || beans.length == 0) {
+            return;
+        }
+        for (InterceptorBean bean : beans) {
+            registry.addInterceptor(bean.getInterceptor()).addPathPatterns(bean.getAddPathPatterns()).excludePathPatterns(bean.getExcludePathPatterns());
+        }
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
         // 获取SpringMvc的ReturnValueHandlers
-        List<HandlerMethodReturnValueHandler> returnValueHandlers = mappingHandlerAdapter.getReturnValueHandlers();
+        List<HandlerMethodReturnValueHandler> returnValueHandlers = handlerAdapter.getReturnValueHandlers();
         // 新建一个List来保存替换后的Handler的List
         List<HandlerMethodReturnValueHandler> handlers = new ArrayList<>(returnValueHandlers);
         // 循环遍历找出RequestResponseBodyMethodProcessor
@@ -49,6 +52,22 @@ public class WebMvcConfigurerDevelop implements WebMvcConfigurer, InitializingBe
             }
         }
         // 重新设置SpringMVC的ReturnValueHandlers
-        mappingHandlerAdapter.setReturnValueHandlers(handlers);
+        handlerAdapter.setReturnValueHandlers(handlers);
+    }
+
+    public RequestMappingHandlerAdapter getHandlerAdapter() {
+        return handlerAdapter;
+    }
+
+    public void setHandlerAdapter(RequestMappingHandlerAdapter handlerAdapter) {
+        this.handlerAdapter = handlerAdapter;
+    }
+
+    public InterceptorFactory getInterceptorFactory() {
+        return interceptorFactory;
+    }
+
+    public void setInterceptorFactory(InterceptorFactory interceptorFactory) {
+        this.interceptorFactory = interceptorFactory;
     }
 }
