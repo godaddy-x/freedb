@@ -1,5 +1,8 @@
 package com.pithy.free.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -10,7 +13,9 @@ import java.nio.charset.StandardCharsets;
 
 public class HttpUtil {
 
-    public static String doPost(String httpUrl, String jsonstr) {
+    private static final Logger log = LoggerFactory.getLogger(HttpUtil.class);
+
+    public static String post(String httpUrl, String jsonstr) {
         HttpURLConnection connection = null;
         InputStream is = null;
         OutputStream os = null;
@@ -39,7 +44,6 @@ public class HttpUtil {
             // 通过输出流对象将参数写出去/传输出去,它是通过字节数组写出的
             os.write(jsonstr.getBytes(StandardCharsets.UTF_8));
             // 通过连接对象获取一个输入流，向远程读取
-            System.out.println("---------"+connection.getResponseCode()+"----"+connection.getResponseMessage());
             if (connection.getResponseCode() == 200) {
                 is = connection.getInputStream();
                 // 对输入流对象进行包装:charset根据工作项目组的要求来设置
@@ -52,30 +56,32 @@ public class HttpUtil {
                     sbf.append("\r\n");
                 }
                 result = sbf.toString();
+            } else {
+                log.error("请求响应异常: 状态码: " + connection.getResponseCode() + " , 异常信息: " + connection.getResponseMessage());
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("请求响应失败", e);
         } finally {
             // 关闭资源
             if (null != br) {
                 try {
                     br.close();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error("关闭br资源失败", e);
                 }
             }
             if (null != os) {
                 try {
                     os.close();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error("关闭os资源失败", e);
                 }
             }
             if (null != is) {
                 try {
                     is.close();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error("关闭is资源失败", e);
                 }
             }
             // 断开与远程地址url的连接
