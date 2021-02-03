@@ -16,7 +16,9 @@ import java.security.SecureRandom;
 public class AES {
 
     private static final Logger log = LoggerFactory.getLogger(AES.class);
+    private static final String s = "XFSZ2UqTndpeUEyZDVkZU5CRzZkSjl4TThCVENqUUJTTSFQQWF4TkgyYXpXdWNhIyRPeSQjdFRLaWhXWnRLT01KdUU1QTNFUlN3Q1hzRSU0RTZTQXd0XloxJCRlIU5";
 
+    private static final char[] KEY_ARR = getKey().toCharArray();
     private static final String KEY_ALGORITHM = "AES";
     private static final String DEFAULT_CIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";
 
@@ -94,6 +96,25 @@ public class AES {
             result[i] = (byte) (high * 16 + low);
         }
         return result;
+    }
+
+    public static String genKey(int... index) {
+        if (index == null || index.length == 0) {
+            return "";
+        }
+        StringBuffer sb = new StringBuffer();
+        for (int i : index) {
+            if (i >= 99) {
+                sb.append(KEY_ARR[91]);
+            } else {
+                sb.append(KEY_ARR[i]);
+            }
+        }
+        return sb.toString();
+    }
+
+    private static String getKey() {
+        return "S3NhU" + s + "T";
     }
 
 }

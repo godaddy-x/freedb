@@ -8,16 +8,10 @@ import com.pithy.free.scan.TableClassLoader;
 import com.pithy.free.sqlcode.aconst.SortBy;
 import com.pithy.free.sqlcode.condition.Cnd;
 import com.pithy.free.sqlcode.condition.imp.SQL;
-import com.pithy.free.utils.ReflectUtil;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
-import java.beans.IntrospectionException;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 public class MainTest {
