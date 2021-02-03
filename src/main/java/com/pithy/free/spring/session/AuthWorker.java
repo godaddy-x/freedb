@@ -10,6 +10,7 @@ import org.springframework.util.Base64Utils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Map;
 
 public class AuthWorker {
 
@@ -26,7 +27,7 @@ public class AuthWorker {
      * @param secret 用户密钥
      * @return 授权token令牌
      */
-    public String createToken(String userId, String secret) throws AuthErrorEx {
+    public String createToken(String userId, String secret, Map<String, String> extinfo) throws AuthErrorEx {
         checkAuthConfig();
         if (StringUtils.isEmpty(userId)) {
             outError("用户主体不能为空");
@@ -40,13 +41,12 @@ public class AuthWorker {
         subject.setRxp(0l);
         subject.setNbf(0l);
         subject.setJti(IdWorker.getSID());
-        subject.setExt(new HashMap<>());
+        subject.setExt(extinfo == null ? new HashMap<>() : extinfo);
         String token = JsonUtil.toJSONString(subject);
         if (StringUtils.isEmpty(token)) {
             outError("生成授权令牌失败");
         }
-        String token_b64 = null;
-        token_b64 = Base64Utils.encodeToString(token.getBytes(StandardCharsets.UTF_8));
+        String token_b64 = Base64Utils.encodeToString(token.getBytes(StandardCharsets.UTF_8));
         String token_hmac = HMAC256.create(token_b64, config.getSecret() + secret);
         return token_b64 + "." + token_hmac;
     }

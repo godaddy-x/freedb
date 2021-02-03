@@ -19,12 +19,15 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 public class SubjectHolder {
 
     private static final Logger log = LoggerFactory.getLogger(SubjectHolder.class);
 
     private AuthWorker authWorker;
+
+    private List<String> uncheckMethod;
 
     public SubjectHolder() {
 
@@ -70,6 +73,16 @@ public class SubjectHolder {
             log.warn("授权工具[AuthWorker]实例尚未初始化");
             return null;
         }
+        String method = request.getRequestURI();
+        AppConfig config = SpringUtils.getBean(AppConfig.class);
+        String[] useThirdPath = config.getUseThirdPath();
+        if (useThirdPath != null && useThirdPath.length > 0) {
+            for (int i = 0; i < useThirdPath.length; i++) {
+                if (method.equals(useThirdPath[i])) {
+                    return null;
+                }
+            }
+        }
         if (!"POST".equals(request.getMethod().toUpperCase()) || !request.getHeader(HttpHeaders.CONTENT_TYPE).equalsIgnoreCase(MediaType.APPLICATION_JSON_VALUE)) {
             throw new AuthErrorEx("只允许post方式application/json请求");
         }
@@ -86,15 +99,12 @@ public class SubjectHolder {
             throw new AuthErrorEx("业务数据解析失败");
         }
         request.setAttribute(SubjectHolder.CTX_SESSION_VALID, data_byte);
-        AppConfig config = SpringUtils.getBean(AppConfig.class);
-        AuthWorker worker = SpringUtils.getBean(AuthWorker.class);
-        String[] path = config.getNoAuthPath();
-        if (path == null || path.length == 0) {
+        String[] noAuthPath = config.getNoAuthPath();
+        if (noAuthPath == null || noAuthPath.length == 0) {
             return null;
         }
-        String method = request.getRequestURI();
-        for (int i = 0; i < path.length; i++) {
-            if (method.equals(path[i])) {
+        for (int i = 0; i < noAuthPath.length; i++) {
+            if (method.equals(noAuthPath[i])) {
                 return null;
             }
         }
@@ -126,6 +136,7 @@ public class SubjectHolder {
         if (!sign.equals(checkSign)) {
             throw new AuthErrorEx("数据签名校验失败");
         }
+        AuthWorker worker = SpringUtils.getBean(AuthWorker.class);
         Subject subject = worker.validToken(token, "");
         if (subject != null) {
             request.setAttribute(SubjectHolder.CTX_SESSION_SUBJECT, subject);
@@ -133,4 +144,11 @@ public class SubjectHolder {
         return subject;
     }
 
+    public List<String> getUncheckMethod() {
+        return uncheckMethod;
+    }
+
+    public void setUncheckMethod(List<String> uncheckMethod) {
+        this.uncheckMethod = uncheckMethod;
+    }
 }
