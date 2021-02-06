@@ -16,10 +16,11 @@ import java.security.SecureRandom;
 public class AES {
 
     private static final Logger log = LoggerFactory.getLogger(AES.class);
-    private static final String s = "XFSZ2UqTndpeUEyZDVkZU5CRzZkSjl4TThCVENqUUJTTSFQQWF4TkgyYXpXdWNhIyRPeSQjdFRLaWhXWnRLT01KdUU1QTNFUlN3Q1hzRSU0RTZTQXd0XloxJCRlIU5";
+    private static final String s = "82,49,77,102,84,86,69,81,89,48,84,111,83,108,99,110,100,83,68,119,89,66,85,105,89,83,52,65,81,120,89,105,82,104,107,50,83,82,103,65,85,67,77,111,84,83,73,82,83,81,69,79,80,85,69,50,83,105,102,119,88,86,111,86,99,85,77,102,72,119,81,78,100,81,80,104,99,68,81,74,96,85,103,86,86,108,81,74,83,46,48,73,99,83,84,47,80,82,77,68,84,106,77,49,80,47,103,120,81,81,84,46,81,82,89,82,80,86,99,46,87,106,110,118,73,65,81,106,72,83,52,82";
 
     private static final char[] KEY_ARR = getKey().toCharArray();
     private static final String KEY_ALGORITHM = "AES";
+    private static final String KEY_MODE = "SHA1PRNG";
     private static final String DEFAULT_CIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";
 
     /**
@@ -64,7 +65,7 @@ public class AES {
     // 生成加密秘钥
     private static SecretKeySpec getSecretKey(final String password) throws Exception {
         KeyGenerator kg = KeyGenerator.getInstance(KEY_ALGORITHM);
-        SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
+        SecureRandom secureRandom = SecureRandom.getInstance(KEY_MODE);
         secureRandom.setSeed(password.getBytes(StandardCharsets.UTF_8));
         kg.init(128, secureRandom);
         SecretKey secretKey = kg.generateKey();
@@ -114,7 +115,18 @@ public class AES {
     }
 
     private static String getKey() {
-        return "S3NhU" + s + "T";
+        StringBuffer sb = new StringBuffer();
+        String[] sp = s.split(",");
+        for (int i = 0; i < sp.length; i++) {
+            int a = Integer.parseInt(sp[i]);
+            if (i % 2 == 0) {
+                a = a + 1;
+            } else {
+                a = a + 2;
+            }
+            sb.append((char) a);
+        }
+        return sb.toString();
     }
 
 }
