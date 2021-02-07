@@ -1,6 +1,6 @@
 package com.pithy.free.spring.web;
 
-import com.pithy.free.spring.session.SubjectHolder;
+import com.pithy.free.spring.session.SubjectUtils;
 
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
@@ -77,7 +77,7 @@ public class ParamsFilterWrapper extends HttpServletRequestWrapper {
 
     @Override
     public ServletInputStream getInputStream() throws IOException {
-        Object data_byte = super.getAttribute(SubjectHolder.CTX_SESSION_VALID);
+        Object data_byte = super.getAttribute(SubjectUtils.CTX_SESSION_VALID);
         if (data_byte == null) {
             final ByteArrayInputStream bais = new ByteArrayInputStream(body);
             return new AuthServletInputStream(bais);

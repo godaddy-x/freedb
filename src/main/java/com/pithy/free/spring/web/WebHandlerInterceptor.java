@@ -1,7 +1,7 @@
 package com.pithy.free.spring.web;
 
 import com.pithy.free.spring.exception.BizErrorEx;
-import com.pithy.free.spring.session.SubjectHolder;
+import com.pithy.free.spring.session.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -14,23 +14,23 @@ public class WebHandlerInterceptor implements HandlerInterceptor {
 
     private static final Logger log = LoggerFactory.getLogger(WebHandlerInterceptor.class);
 
-    private SubjectHolder subjectHolder;
+    private SubjectUtils subjectUtils;
 
     public WebHandlerInterceptor() {
 
     }
 
-    public WebHandlerInterceptor(SubjectHolder subjectHolder) {
-        this.subjectHolder = subjectHolder;
+    public WebHandlerInterceptor(SubjectUtils subjectUtils) {
+        this.subjectUtils = subjectUtils;
     }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        SubjectHolder.rebuild404And500Code(response);
-        if (subjectHolder == null) {
-            throw new BizErrorEx("preHandle subjectHolder uninitialized");
+        SubjectUtils.rebuild404And500Code(response);
+        if (subjectUtils == null) {
+            throw new BizErrorEx("preHandle SubjectUtils uninitialized");
         }
-        subjectHolder.authenticate(request, response);
+        subjectUtils.authenticate(request, response);
         return true;
     }
 
@@ -42,11 +42,11 @@ public class WebHandlerInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
     }
 
-    public SubjectHolder getSubjectHolder() {
-        return subjectHolder;
+    public SubjectUtils getSubjectUtils() {
+        return subjectUtils;
     }
 
-    public void setSubjectHolder(SubjectHolder subjectHolder) {
-        this.subjectHolder = subjectHolder;
+    public void setSubjectUtils(SubjectUtils subjectUtils) {
+        this.subjectUtils = subjectUtils;
     }
 }

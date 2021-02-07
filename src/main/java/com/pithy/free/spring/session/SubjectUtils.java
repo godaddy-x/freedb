@@ -21,19 +21,19 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
-public class SubjectHolder {
+public class SubjectUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(SubjectHolder.class);
+    private static final Logger log = LoggerFactory.getLogger(SubjectUtils.class);
 
     private AuthWorker authWorker;
 
     private List<String> uncheckMethod;
 
-    public SubjectHolder() {
+    public SubjectUtils() {
 
     }
 
-    public SubjectHolder(AuthWorker authWorker) {
+    public SubjectUtils(AuthWorker authWorker) {
         this.authWorker = authWorker;
     }
 
@@ -98,7 +98,7 @@ public class SubjectHolder {
         if (data_byte == null || data_byte.length == 0) {
             throw new AuthErrorEx("业务数据解析失败");
         }
-        request.setAttribute(SubjectHolder.CTX_SESSION_VALID, data_byte);
+        request.setAttribute(SubjectUtils.CTX_SESSION_VALID, data_byte);
         String[] noAuthPath = config.getNoAuthPath();
         if (noAuthPath == null || noAuthPath.length == 0) {
             return null;
@@ -139,7 +139,7 @@ public class SubjectHolder {
         AuthWorker worker = SpringUtils.getBean(AuthWorker.class);
         Subject subject = worker.validToken(token, "");
         if (subject != null) {
-            request.setAttribute(SubjectHolder.CTX_SESSION_SUBJECT, subject);
+            request.setAttribute(SubjectUtils.CTX_SESSION_SUBJECT, subject);
         }
         return subject;
     }
